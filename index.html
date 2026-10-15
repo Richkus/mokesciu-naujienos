@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mokesčių naujienos: prototipas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400..800&display=swap" rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<style>
+  /* Layout: Suflerio meniu | naujienų sąrašas | atidaryta naujiena (master-detail inbox) */
+  :root {
+    color-scheme: light;
+    --ms-font: 'Open Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    --ms-ink: #2f4347;
+    --ms-ink-soft: #405359;
+    --ms-sub: #5f7a7e;
+    --ms-muted: #8aa3a6;
+    --ms-line: #e3ecec;
+    --ms-surface: #ffffff;
+    --ms-surface-soft: #f6fafa;
+    --ms-sel: #e9f3f3;
+    --ms-pill: #eef2f2;
+
+    --ms-teal: #53a9b1;
+    --ms-teal-dark: #0f5354;
+    --ms-check: #3e9aa2;
+    --ms-check-soft: #e4f3f4;
+    --ms-link: #1f8f97;
+    --ms-sidebar: #99cccc;
+    --ms-sidebar-active: #b3d9d9;
+    --ms-topbar: #f1f7f7;
+    --ms-tip: #628e8e;
+    --ms-coral: #e9706d;
+    --ms-toast: #1f4a4c;
+
+    --ms-radius-sm: 6px;
+    --ms-radius-md: 10px;
+
+    --ms-list-w: 380px;
+    --ms-ease: cubic-bezier(.22, .61, .36, 1);
+    --ms-spring: cubic-bezier(.34, 1.56, .64, 1);
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+  body { margin: 0; font-family: var(--ms-font); color: var(--ms-ink); background: var(--ms-surface); -webkit-font-smoothing: antialiased; }
+  [x-cloak] { display: none !important; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  a { color: var(--ms-link); }
+
+  /* ---------- Shell ---------- */
+  .ms-app { display: grid; grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); height: 100vh; height: 100dvh; }
+  .ms-sidebar { background: var(--ms-sidebar); padding: 24px 0 32px; overflow-y: auto; }
+  .ms-logo { display: block; padding: 0 26px 24px; color: #fff; text-decoration: none; line-height: 1; }
+  /* Tikras Suflerio logotipas (mokesciu-sufleris.lt/images_v2/logo_white.svg) + PRO ženkliukas */
+  .ms-logo { position: relative; width: max-content; }
+  .ms-logo-svg { display: block; width: 93px; height: auto; }
+  .ms-logo-pro { position: absolute; top: 0; left: calc(100% - 26px - 8px); font-style: normal; font-size: 8px; font-weight: 700; background: #c6278d; color: #fff; padding: 1px 3px; border-radius: 2px; letter-spacing: .05em; line-height: 1.2; }
+  .ms-pro-svg { display: inline-block; vertical-align: -2px; margin-right: 6px; }
+  .ms-logo small { display: block; font-size: 9px; font-weight: 700; letter-spacing: .25em; }
+  .ms-logo strong { font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+  .ms-logo em { font-style: normal; font-size: 8px; font-weight: 700; background: #c6278d; color: #fff; padding: 1px 3px; border-radius: 2px; margin-left: 4px; vertical-align: 2px; letter-spacing: .05em; }
+  .ms-nav { list-style: none; margin: 0; padding: 0; }
+  .ms-nav a { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-right: 18px; padding: 7px 12px 7px 26px; color: var(--ms-teal-dark); text-decoration: none; font-size: 14px; border-radius: 0 20px 20px 0; transition: background .2s; }
+  .ms-nav a:hover { background: rgba(255,255,255,.18); }
+  .ms-nav a.is-active { background: var(--ms-sidebar-active); font-weight: 600; }
+  .ms-nav .ms-count { font-size: 12px; color: #5c8a8a; }
+  .ms-nav .ms-badge { font-size: 11px; font-weight: 700; background: var(--ms-coral); color: #fff; border-radius: 10px; padding: 1px 7px; font-variant-numeric: tabular-nums; transition: transform .3s var(--ms-spring); }
+  /* Pažymėjus naujieną meniu skaičius vos vos „krusteli“ į šonus */
+  .ms-badge.is-nudge { animation: badge-nudge .5s cubic-bezier(.36,.07,.19,.97); }
+  @keyframes badge-nudge { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2px); } 45% { transform: translateX(2px); } 70% { transform: translateX(-1px); } 85% { transform: translateX(.5px); } }
+  .ms-nav-sep { height: 1px; background: #77a7a7; margin: 16px 18px 16px 26px; }
+  .ms-pro { font-size: 10px; font-weight: 700; color: #c6278d; background: #f3d6e8; padding: 1px 4px; border-radius: 2px; margin-right: 6px; }
+
+  .ms-main { display: flex; flex-direction: column; min-width: 0; height: 100%; }
+  .ms-topbar { flex: 0 0 52px; background: var(--ms-topbar); display: flex; align-items: center; gap: 24px; padding: 0 28px; border-top: 4px solid var(--ms-sidebar); }
+  .ms-gsearch { flex: 0 1 460px; min-width: 0; position: relative; display: flex; align-items: center; gap: 6px; height: 32px; box-sizing: border-box; border: 1px solid #669999; border-radius: 39px; padding: 0 10px 0 4px; background: #fff; cursor: text; transition: box-shadow .2s; }
+  .ms-gsearch.is-focus { box-shadow: 0 0 0 3px rgba(83,169,177,.25); }
+  .ms-gsearch.is-flash { animation: g-flash 1.1s var(--ms-ease); }
+  @keyframes g-flash {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(83,169,177,.25); border-color: #669999; }
+    20%, 60% { box-shadow: 0 0 0 7px rgba(83,169,177,.35); border-color: var(--ms-teal); }
+    40%, 80% { box-shadow: 0 0 0 3px rgba(83,169,177,.2); border-color: var(--ms-teal); }
+  }
+  .ms-gsearch input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; padding: 0 0 0 10px; font: inherit; font-size: 14px; color: var(--ms-ink); }
+  .ms-gsearch input::-webkit-search-cancel-button { display: none; }
+  .ms-gsearch input::placeholder { color: #669999; }
+  .ms-gsearch > svg { flex: 0 0 auto; }
+  .ms-scope { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 3px 0 10px; border-radius: 20px; background: var(--ms-sidebar-active); color: var(--ms-teal-dark); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .ms-scope button { width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(15,83,84,.12); color: var(--ms-teal-dark); display: grid; place-items: center; padding: 0; transition: background .15s; }
+  .ms-scope button:hover { background: rgba(15,83,84,.25); }
+  .ms-scope .is-short { display: none; }
+  .ms-gclear { flex: 0 0 auto; border: 0; background: none; color: var(--ms-muted); padding: 2px 4px; line-height: 1; }
+  .ms-gdrop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 40; background: #fff; border: 1px solid var(--ms-line); border-radius: 10px; box-shadow: 0 8px 24px rgba(15,83,84,.14); padding: 6px; }
+  .ms-gdrop button { width: 100%; text-align: left; border: 0; background: none; border-radius: 7px; padding: 8px 10px; font-size: 13px; color: var(--ms-ink-soft); display: flex; align-items: center; gap: 8px; }
+  .ms-gdrop button:hover { background: var(--ms-surface-soft); }
+  .ms-gdrop .ms-scope { pointer-events: none; padding-right: 10px; }
+  .ms-topnav { margin-left: auto; display: flex; gap: 26px; }
+  .ms-topnav a { display: flex; align-items: center; gap: 7px; color: var(--ms-teal-dark); font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+
+  /* ---------- Inbox split ---------- */
+  .nx { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--ms-list-w) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+
+  /* List column */
+  .nx-list { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--ms-line); }
+  .nx-head { padding: 22px 20px 12px; display: grid; gap: 14px; }
+  .nx-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .nx-title h1 { margin: 0; font-size: 20px; font-weight: 600; color: var(--ms-ink-soft); }
+  .nx-title span { font-size: 12px; color: var(--ms-muted); font-variant-numeric: tabular-nums; }
+
+  .nx-tabs { display: flex; gap: 2px; background: var(--ms-pill); border-radius: 9px; padding: 3px; }
+  .nx-tabs button { flex: 1 0 auto; border: 0; background: transparent; border-radius: 7px; padding: 6px 12px; font-size: 13px; color: var(--ms-sub); display: flex; align-items: center; justify-content: center; gap: 6px; transition: background .2s, color .2s, box-shadow .2s; white-space: nowrap; }
+  .nx-tabs button.is-on { background: #fff; color: var(--ms-ink); font-weight: 600; box-shadow: 0 1px 3px rgba(15,83,84,.12); }
+  .nx-tabs b { font-size: 11px; font-weight: 700; color: var(--ms-muted); font-variant-numeric: tabular-nums; }
+  /* Neperskaitytos: taškas + skaičius, kad nesidubliuotų su raudonu meniu ženkliuku */
+  .nx-tabs button.is-unread { color: var(--ms-ink); font-weight: 600; }
+  .nx-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ms-coral); flex: 0 0 auto; transition: transform .3s var(--ms-spring), opacity .2s; }
+  .nx-tabs b.is-hot { font-size: 12.5px; font-weight: 600; color: var(--ms-ink); font-variant-numeric: tabular-nums; }
+
+  .nx-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 10px 24px; }
+  .nx-scroll::-webkit-scrollbar { width: 6px; }
+  .nx-scroll::-webkit-scrollbar-thumb { background: #cfdcdc; border-radius: 3px; }
+  .nx-group { font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--ms-muted); padding: 16px 10px 6px; }
+
+  .nx-row { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; padding: 12px 10px; border-radius: var(--ms-radius-md); cursor: pointer; transition: background .15s; outline: none; }
+  .nx-row:hover { background: var(--ms-surface-soft); }
+  .nx-row:focus-visible { box-shadow: inset 0 0 0 2px var(--ms-teal); }
+  .nx-row.is-sel { background: var(--ms-sel); }
+  .nx-row.is-leaving { overflow: hidden; opacity: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; transition: height .34s var(--ms-ease), padding .34s var(--ms-ease), opacity .22s ease; }
+  .nx-row h3 { margin: 0; font-size: 14px; line-height: 1.4; font-weight: 700; color: var(--ms-ink); transition: color .3s, font-weight .3s; }
+  .nx-row.is-read h3 { font-weight: 400; color: var(--ms-sub); }
+  .nx-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 5px; font-size: 12px; color: var(--ms-muted); font-variant-numeric: tabular-nums; }
+  .nx-tag { font-size: 11px; color: var(--ms-sub); background: var(--ms-pill); padding: 1px 8px; border-radius: 10px; }
+  .nx-sum { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--ms-sub); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .nx-row.is-read .nx-sum { color: var(--ms-muted); }
+
+  /* Sąrašo pabaiga tab'e „Visos“: senesnės naujienos ieškomos per paiešką */
+  .nx-end { margin: 18px 10px 6px; padding: 22px 16px 8px; border-top: 1px solid var(--ms-line); text-align: center; display: grid; justify-items: center; gap: 4px; }
+  .nx-end svg { margin-bottom: 6px; }
+  .nx-end strong { font-size: 13.5px; font-weight: 600; color: var(--ms-ink-soft); }
+  .nx-end p { margin: 0 0 8px; font-size: 12.5px; line-height: 1.5; color: var(--ms-muted); max-width: 260px; }
+  .nx-end button { border: 1px solid var(--ms-line); background: #fff; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; color: var(--ms-link); display: inline-flex; align-items: center; gap: 7px; transition: background .15s, border-color .15s; }
+  .nx-end button:hover { background: var(--ms-surface-soft); border-color: #c9dada; }
+  .nx-none { text-align: center; padding: 48px 20px; color: var(--ms-muted); font-size: 13px; }
+  .nx-none strong { display: block; color: var(--ms-sub); font-size: 14px; margin-bottom: 4px; }
+  .nx-keys { padding: 10px 20px; border-top: 1px solid var(--ms-line); font-size: 11px; color: var(--ms-muted); display: flex; gap: 14px; }
+  .nx-keys kbd { font: inherit; font-weight: 600; border: 1px solid var(--ms-line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--ms-sub); background: #fff; }
+
+  /* ---------- Checkbox: pagrindinis elementas ---------- */
+  .ck { position: relative; width: 26px; height: 26px; padding: 0; border: 2px solid var(--ms-teal); border-radius: 7px; background: #fff; display: grid; place-items: center; transition: background .25s var(--ms-ease), border-color .25s var(--ms-ease), box-shadow .2s; }
+  .ck:hover { box-shadow: 0 0 0 4px var(--ms-check-soft); }
+  /* Nepažymėtas checkbox: ryškesnis, kad trauktų akį */
+  .ck:not(.is-on) { border-width: 2.5px; border-color: var(--ms-check); background: var(--ms-check-soft); box-shadow: inset 0 1px 2px rgba(15,83,84,.12); }
+  .ck:not(.is-on):hover { background: #fff; border-color: var(--ms-teal-dark); box-shadow: 0 0 0 4px #d3ecee; }
+  .ck:not(.is-on):focus-visible { box-shadow: 0 0 0 3px rgba(83,169,177,.45); }
+  .ck:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.45); }
+  .ck svg { position: relative; z-index: 1; width: 15px; height: 15px; overflow: visible; }
+  .ck path { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 22; stroke-dashoffset: 22; transition: stroke-dashoffset .2s ease, stroke .2s, opacity .2s; }
+  .ck:not(.is-on):not(.no-hint):hover path { stroke: var(--ms-teal); stroke-dashoffset: 0; opacity: .4; }
+  .ck.is-on { background: var(--ms-check-soft); border-color: var(--ms-check); }
+  .ck.is-on path { stroke-dashoffset: 0; transition: stroke-dashoffset .36s cubic-bezier(.65, 0, .35, 1) .14s, stroke .2s, opacity .2s; }
+
+  /* Pažymėjimo animacija „mentorius“: ramus, užtikrintas patvirtinimas be konfeti.
+     1) lengvas paspaudimas, 2) spalva „įsigeria“ iš centro, 3) varnelė užrašoma vienu judesiu, 4) vienas tylus žiedas */
+  .ck::before { content: ''; position: absolute; inset: -1px; border-radius: 5px; background: var(--ms-check); transform: scale(0); opacity: 0; transition: transform .28s cubic-bezier(.2, .8, .2, 1), opacity .18s ease; pointer-events: none; }
+  .ck.is-on::before { transform: scale(1); opacity: 1; }
+  .ck::after { content: ''; position: absolute; inset: -2.5px; border-radius: 9px; border: 1.5px solid var(--ms-check); opacity: 0; pointer-events: none; }
+  .ck.is-pop { animation: ck-pop .5s cubic-bezier(.2, .8, .2, 1); }
+  .ck.is-pop::after { animation: ck-ring .7s cubic-bezier(.2, .8, .2, 1) .12s; }
+  @keyframes ck-pop { 0% { transform: scale(1); } 18% { transform: scale(.9); } 55% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  @keyframes ck-ring { 0% { transform: scale(1); opacity: .45; } 100% { transform: scale(1.5); opacity: 0; } }
+
+
+  /* Tooltip */
+  .tip { position: fixed; z-index: 50; opacity: 0; transition: opacity .12s ease; transform: translate(-6px, calc(-100% - 10px)); background: var(--ms-tip); color: #fff; font-size: 11.5px; padding: 4px 9px; border-radius: 4px; white-space: nowrap; pointer-events: none; }
+  .tip.is-on { opacity: 1; }
+  .tip::after { content: ''; position: absolute; left: 14px; top: 100%; border: 5px solid transparent; border-top-color: var(--ms-tip); }
+
+  /* ---------- Reader ---------- */
+  .nx-reader { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--ms-surface); }
+  .nx-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 12px 28px; border-bottom: 1px solid var(--ms-line); }
+  .nx-back { display: none; border: 0; background: none; padding: 4px 8px 4px 0; color: var(--ms-link); font-weight: 600; font-size: 14px; align-items: center; gap: 4px; }
+  .nx-pos { font-size: 12px; color: var(--ms-muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+  .nx-ahead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -6px -6px 6px 0; }
+  .nx-article .nx-ahead .nx-meta { margin: 0; }
+  .nx-tools { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+  .nx-tool { width: 34px; height: 34px; border: 0; background: none; border-radius: 8px; display: grid; place-items: center; color: var(--ms-teal-dark); transition: background .15s; }
+  .nx-tool:hover { background: var(--ms-surface-soft); }
+  .nx-tool:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.4); }
+  .nx-tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; transition: fill .2s; }
+  .nx-tool.is-on svg { fill: currentColor; }
+  .nx-tool.is-pop svg { animation: ck-pop .45s cubic-bezier(.2, .8, .2, 1); }
+  .nx-saved { color: var(--ms-teal-dark); display: inline-flex; }
+  .nx-iconbtn { width: 30px; height: 30px; border: 1px solid var(--ms-line); background: #fff; border-radius: 7px; display: grid; place-items: center; color: var(--ms-sub); transition: background .15s, border-color .15s; }
+  .nx-iconbtn:hover:not(:disabled) { background: var(--ms-surface-soft); border-color: #cfdcdc; }
+  .nx-iconbtn:disabled { opacity: .35; cursor: default; }
+
+  .nx-doc { flex: 1; min-height: 0; overflow-y: auto; }
+  .nx-article { max-width: 680px; padding: 32px 40px 40px; }
+  .nx-article .nx-meta { margin: 0 0 12px; }
+  .nx-article h2 { margin: 0 0 8px; font-size: 24px; line-height: 1.3; font-weight: 700; color: var(--ms-ink-soft); text-wrap: balance; }
+  .nx-src { font-size: 13px; color: var(--ms-muted); margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--ms-line); }
+  .nx-body p { font-size: 15px; line-height: 1.7; color: var(--ms-ink-soft); margin: 0 0 16px; }
+  .nx-acts { margin-top: 28px; }
+  .nx-acts h4 { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--ms-muted); }
+  .nx-acts ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .nx-acts a { font-size: 14px; text-decoration: none; }
+  .nx-acts a:hover { text-decoration: underline; }
+
+  /* Susipažinau juosta */
+  .nx-next { margin-left: auto; border: 0; background: var(--ms-teal); color: #fff; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: background .2s; }
+  .nx-next:hover { background: #47979f; }
+
+  /* Tuščia būsena (Linear stilius) */
+  .nx-empty { flex: 1; display: grid; place-items: center; padding: 32px; text-align: center; }
+  .nx-empty-in { max-width: 320px; display: grid; justify-items: center; gap: 6px; }
+  .nx-empty svg { margin-bottom: 10px; }
+  .nx-empty strong { font-size: 16px; font-weight: 600; color: var(--ms-ink-soft); }
+  .nx-empty p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.5; color: var(--ms-muted); }
+  .nx-empty .nx-next { margin: 0; }
+
+  /* Toast */
+  .toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; background: var(--ms-toast); color: #fff; font-size: 13px; border-radius: 10px; padding: 10px 10px 10px 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 8px 28px rgba(15,83,84,.28); white-space: nowrap; }
+  .toast button { border: 0; background: rgba(255,255,255,.12); color: #fff; font-weight: 600; font-size: 12.5px; padding: 5px 10px; border-radius: 6px; }
+  .toast button:hover { background: rgba(255,255,255,.22); }
+
+  @media (max-width: 720px) { .toast { left: 16px; right: 16px; bottom: 16px; justify-content: space-between; } }
+  .toast-start { opacity: 0; transform: translateY(12px) scale(.98); }
+
+  /* Transitions */
+  .fade-enter { transition: opacity .25s var(--ms-ease), transform .25s var(--ms-ease); }
+  .fade-start { opacity: 0; transform: translateY(6px); }
+  .fade-end { opacity: 1; transform: none; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1180px) { :root { --ms-list-w: 330px; } .ms-topnav span { display: none; } .nx-tabs button { padding: 6px 8px; } }
+  @media (max-width: 900px) {
+    .ms-app { grid-template-columns: minmax(0, 1fr); }
+    .ms-sidebar { display: none; }
+    .ms-topbar { padding: 0 16px; }
+  }
+  @media (max-width: 720px) {
+    .ms-scope .is-long { display: none; }
+    .ms-scope .is-short { display: inline; }
+    .nx { grid-template-columns: minmax(0, 1fr); }
+    .nx-list { border-right: 0; }
+    .nx.is-open .nx-list { display: none; }
+    .nx:not(.is-open) .nx-reader { display: none; }
+    .nx-back { display: inline-flex; }
+    .nx-bar { padding-left: 16px; padding-right: 16px; gap: 6px; }
+    .nx-pos, .nx-bar .nx-iconbtn { display: none; }
+    .nx-article { padding: 24px 16px 32px; }
+    .nx-head { padding: 18px 16px 10px; }
+    .nx-scroll { padding: 0 6px 24px; }
+    .nx-keys { display: none; }
+  }
+
+  /* ==========================================================
+     „Sena“ versija: dabartinė Suflerio naujienų skiltis ir vidinis
+     puslapis, tik su nauju checkbox'u
+     ========================================================== */
+  .old { flex: 1; min-height: 0; overflow-y: auto; background: var(--ms-surface); }
+  .old-page { display: flex; align-items: flex-start; gap: 32px; padding: 40px 32px 80px 52px; }
+  .old-main { flex: 0 1 660px; min-width: 0; }
+  .old-h1 { display: flex; align-items: center; gap: 2px; margin: 0; font-size: 23px; line-height: 32px; font-weight: 500; letter-spacing: 0; color: var(--ms-ink-soft); }
+  /* Tab'ai kaip Suflerio „Testai“ puslapyje: tekstas + koralinis pabraukimas */
+  .old-tabs { display: flex; gap: 4px; margin-top: 18px; border-bottom: 1px solid var(--ms-line); }
+  .old-tabs button { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px 11px; border: 0; background: none; font-size: 14px; line-height: 21px; font-weight: 600; letter-spacing: 0; color: var(--ms-ink-soft); white-space: nowrap; transition: color .15s; }
+  /* Hover kaip Suflerio „Testai“ tab'uose: šviesiai pilkas suapvalintas fonas už teksto */
+  .old-tabs button { isolation: isolate; }
+  .old-tabs button::before { content: ''; position: absolute; inset: 0 0 5px; z-index: -1; border-radius: 4px; background: #e9eeee; opacity: 0; transition: opacity .15s ease; }
+  .old-tabs button:hover::before { opacity: 1; }
+  .old-tabs button.is-on:hover::before { opacity: 0; }
+  .old-tabs button::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: #f19a97; transform: scaleX(0); transition: transform .25s var(--ms-ease); }
+  .old-tabs button.is-on { font-weight: 700; }
+  .old-tabs button.is-on::after { transform: scaleX(1); }
+  .old-tabs button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.35); border-radius: 4px; }
+  .old-tabs .is-hot { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .old-empty { padding: 72px 0 40px; }
+  .old-empty-in { display: grid; justify-items: center; gap: 6px; max-width: 340px; margin: 0 auto; text-align: center; }
+  .old-empty-in strong { margin-top: 10px; font-size: 16px; font-weight: 600; color: var(--ms-ink-soft); }
+  .old-empty-in p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; color: var(--ms-muted); }
+  /* Iliustracija „atgyja“ vieną kartą atsiradus: apskritimas apsibrėžia, varnelė užrašoma */
+  .old-empty-ill { stroke: #9fb9bb; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .old-empty-ill .tray { fill: var(--ms-surface-soft); }
+  .old-empty-ill.is-done circle { fill: var(--ms-check-soft); stroke: var(--ms-check); stroke-dasharray: 183; stroke-dashoffset: 183; animation: old-draw .7s var(--ms-ease) .05s forwards; }
+  .old-empty-ill.is-done path { stroke: var(--ms-check); stroke-width: 3.5; stroke-dasharray: 40; stroke-dashoffset: 40; animation: old-draw .45s cubic-bezier(.65,0,.35,1) .6s forwards; }
+  .old-empty-in { animation: old-rise .45s var(--ms-ease) both; }
+  @media (prefers-reduced-motion: reduce) { .old-empty-ill.is-done circle, .old-empty-ill.is-done path { stroke-dashoffset: 0; } }
+  @keyframes old-draw { to { stroke-dashoffset: 0; } }
+  @keyframes old-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .old-info { position: relative; display: inline-flex; }
+  .old-info-btn { display: grid; place-items: center; width: 24px; height: 24px; transform: translateY(2px); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ms-muted); transition: color .15s, background .15s; }
+  .old-info-btn:hover, .old-info-btn.is-on { color: var(--ms-teal-dark); background: var(--ms-surface-soft); }
+  .old-info-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.4); }
+  .old-info-pop { position: absolute; top: calc(100% + 8px); left: -6px; z-index: 40; width: 340px; padding: 16px 18px; border: 1px solid var(--ms-line); border-radius: 10px; background: #fff; box-shadow: 0 10px 28px rgba(15,83,84,.12); font-size: 14.5px; line-height: 22px; font-weight: 400; color: var(--ms-ink-soft); }
+  .old-info-pop strong { display: block; margin-bottom: 6px; font-size: 15px; font-weight: 600; color: var(--ms-ink); }
+
+  .old-item { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; padding: 30px 0 34px; border-bottom: 1px solid var(--ms-line); }
+  .old-item .ck { margin-top: 2px; }
+  .old-item.is-leaving { overflow: hidden; opacity: 0; padding-top: 0; padding-bottom: 0; border-bottom-color: transparent; pointer-events: none; transition: height .34s var(--ms-ease), padding .34s var(--ms-ease), opacity .22s ease, border-color .34s; }
+  /* „Dabartinė“: neperskaityta = lašišinis kontūras (variantas B), perskaityta = turkio užpildas */
+  .old .ck:not(.is-on) { border: 2px solid var(--ms-coral); background: #fff6f5; box-shadow: none; }
+  .old .ck:not(.is-on):hover { border-color: #d95b58; background: #fff; box-shadow: 0 0 0 4px #fbe3e1; }
+  .old .ck:not(.is-on):not(.no-hint):hover path { stroke: var(--ms-coral); }
+  .old .ck:not(.is-on):focus-visible { box-shadow: 0 0 0 3px rgba(233,112,109,.35); }
+  .old-ack:hover .ck:not(.is-on) { border-color: #d95b58; background: #fff; }
+  /* Anksčiau perskaitytos naujienos varnelė „nugesinta“; ryški tik ką tik pažymėtos.
+     Užvedus pelę grįžta ryški, kad būtų aišku, jog galima atžymėti. */
+  .old .ck.is-on.is-muted { border-color: #cfe3e4; }
+  .old .ck.is-on.is-muted::before { background: #cfe3e4; }
+  .old .ck.is-on.is-muted path { stroke: #4c8f94; }
+  .old .ck.is-on.is-muted:hover, .old-ack:hover .ck.is-on.is-muted { border-color: var(--ms-check); }
+  .old .ck.is-on.is-muted:hover::before, .old-ack:hover .ck.is-on.is-muted::before { background: var(--ms-check); }
+  .old .ck.is-on.is-muted:hover path, .old-ack:hover .ck.is-on.is-muted path { stroke: #fff; }
+  /* „Perskaitytos“ tab'e dar neutraliau: pilkas langelis, balta varnelė; hover tik vos patamsina */
+  .old[data-tab="read"] .old-item .ck.is-on.is-muted { border-color: #e1e7e7; }
+  .old[data-tab="read"] .old-item .ck.is-on.is-muted::before { background: #e1e7e7; }
+  .old[data-tab="read"] .old-item .ck.is-on.is-muted path { stroke: #fff; }
+  .old[data-tab="read"] .old-item .ck.is-on.is-muted:hover { border-color: #ccd5d6; box-shadow: none; }
+  .old[data-tab="read"] .old-item .ck.is-on.is-muted:hover::before { background: #ccd5d6; }
+  .old[data-tab="read"] .old-item .ck.is-on.is-muted:hover path { stroke: #fff; }
+  .old .ck.is-on::before, .old .ck.is-on { transition: background .3s var(--ms-ease), border-color .3s var(--ms-ease), transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease; }
+  .old-item h3 { margin: 0; font-size: 15px; line-height: 23px; font-weight: 700; color: var(--ms-ink); cursor: pointer; }
+  .old-item h3:hover { color: var(--ms-link); }
+  .old-item .nx-meta { margin-top: 6px; }
+  .old-sum { position: relative; margin: 16px 0 14px; font-size: 14px; line-height: 23px; color: var(--ms-ink-soft); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .old-sum::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 23px; background: linear-gradient(rgba(255,255,255,0), var(--ms-surface)); }
+  .old-more { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 0; font-size: 13.5px; color: var(--ms-link); }
+  .old-more:hover { text-decoration: underline; }
+  /* Perskaityta naujiena: viskas šiek tiek nublanksta, „Skaityti plačiau“ tampa ramia pilka nuoroda */
+  .old-item h3, .old-sum, .old-more, .old-item .nx-meta { transition: color .4s var(--ms-ease), opacity .4s var(--ms-ease); }
+  .old-item.is-read h3 { color: var(--ms-sub); }
+  .old-item.is-read .old-sum { color: var(--ms-muted); }
+  .old-item.is-read .old-more { color: var(--ms-muted); }
+  .old-item.is-read .old-more:hover { color: var(--ms-link); }
+  .old-item.is-read .nx-meta { opacity: .8; }
+
+  .old-queue-end { display: grid; justify-items: center; padding-top: 22px; font-size: 13px; color: var(--ms-muted); }
+  .old-load-more { padding: 8px 16px; border: 1px solid var(--ms-line); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--ms-link); transition: background .15s, border-color .15s; }
+  .old-load-more:hover { background: var(--ms-surface-soft); border-color: #c9dada; }
+  .old-pager { display: flex; justify-content: center; align-items: center; gap: 6px; padding-top: 22px; }
+  .old-pager button { min-width: 28px; height: 28px; padding: 0 6px; border: 0; border-radius: 4px; background: none; font-size: 13px; font-weight: 600; color: var(--ms-ink-soft); font-variant-numeric: tabular-nums; transition: background .15s; }
+  .old-pager button:hover { background: var(--ms-surface-soft); }
+  .old-pager button.is-on { background: #e9eeee; cursor: default; }
+  .old-pager .old-pager-next { display: grid; place-items: center; background: var(--ms-teal); color: #fff; }
+  .old-pager .old-pager-next:hover { background: #47979f; }
+  .old-pager span { font-size: 13px; font-weight: 600; color: var(--ms-ink-soft); padding: 0 2px; }
+  .old-side { flex: 0 0 295px; position: sticky; top: 40px; }
+  .old-card { display: block; border: 1px solid var(--ms-line); border-radius: 4px; overflow: hidden; text-decoration: none; color: inherit; transition: box-shadow .2s; }
+  .old-card:hover { box-shadow: 0 6px 20px rgba(15,83,84,.1); }
+  .old-card-img { height: 140px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(135deg, #e3eeee 0%, #eef4f1 50%, #e6ecf3 100%); }
+  .old-card-paper { width: 190px; padding: 14px 18px 18px; background: #fff; transform: rotate(14deg) translateY(4px); box-shadow: 0 6px 18px rgba(15,83,84,.12); color: var(--ms-ink-soft); }
+  .old-card-paper span { display: block; font-size: 18px; line-height: 1; }
+  .old-card-paper strong { display: block; font-size: 34px; line-height: 1.05; font-weight: 600; font-style: italic; letter-spacing: .02em; }
+  .old-card-paper i { display: block; height: 3px; margin-top: 8px; border-radius: 2px; background: var(--ms-line); }
+  .old-card-body { padding: 18px 20px 20px; }
+  .old-card-body small { display: block; font-size: 12px; color: var(--ms-muted); letter-spacing: .02em; }
+  .old-card-body strong { display: block; margin: 8px 0 12px; font-size: 15px; font-weight: 600; color: var(--ms-ink-soft); }
+  .old-card-body span { font-size: 12px; color: var(--ms-ink); }
+
+  /* Vidinis puslapis */
+  .old-art { flex: 0 1 660px; min-width: 0; }
+  .old-ack { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 4px 14px 4px 4px; border: 1px solid var(--ms-line); border-radius: 9px; background: #fff; cursor: pointer; transition: background .3s var(--ms-ease), border-color .3s var(--ms-ease); }
+  .old-ack:hover { border-color: #c9dada; background: var(--ms-surface-soft); }
+  .old-ack.is-on { background: var(--ms-check-soft); border-color: transparent; }
+  .old-ack .ck { width: 24px; height: 24px; border-radius: 6px; }
+  .old-ack .ck svg { width: 14px; height: 14px; }
+  .old-ack-txt { font-size: 13.5px; font-weight: 600; line-height: 1; color: var(--ms-ink); }
+  .old-art-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 13px; color: var(--ms-muted); }
+  .old-art-meta .nx-tools { margin: -6px -6px -6px 0; }
+  .old-art h1 { margin: 0 0 16px; font-size: 22px; line-height: 1.38; font-weight: 700; color: var(--ms-ink-soft); text-wrap: balance; }
+  .old-art .nx-body p { font-size: 15px; line-height: 26px; color: var(--ms-ink-soft); margin: 0 0 18px; }
+
+  .old-admin { display: none !important; } /* admin įrankiai laikinai paslėpti */
+  .old-admin { position: fixed; right: 44px; top: 50%; transform: translateY(-40%); z-index: 30; display: grid; gap: 4px; padding: 10px 6px; background: #fff; border: 1px solid var(--ms-line); border-radius: 6px; box-shadow: 0 6px 20px rgba(15,83,84,.08); }
+  .old-admin button { width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: none; border-radius: 6px; color: var(--ms-teal-dark); }
+  .old-admin button:hover { background: var(--ms-surface-soft); }
+
+  /* ==========================================================
+     Admin perjungėjas Sena / Nauja (Linear stiliumi)
+     ========================================================== */
+  .vswitch { position: fixed; left: 16px; bottom: 16px; z-index: 70; display: flex; align-items: center; gap: 6px; padding: 3px; border: 1px solid rgba(15,83,84,.10); border-radius: 9px; background: rgba(255,255,255,.88); box-shadow: 0 2px 8px rgba(15,40,40,.06); font-size: 11.5px; color: #7d8a8c; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .vswitch-label { display: flex; align-items: center; gap: 6px; padding: 0 2px 0 7px; font-weight: 500; }
+  .vswitch-label i { width: 5px; height: 5px; border-radius: 50%; background: #b5c0c1; }
+  .vswitch-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 2px; border-radius: 6px; background: #f1f4f4; }
+  .vswitch-seg::before { content: ''; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(15,40,40,.10); transition: transform .22s var(--ms-ease); }
+  .vswitch-seg.is-new::before { transform: translateX(100%); }
+  .vswitch-seg button { position: relative; z-index: 1; min-width: 48px; padding: 3px 9px; border: 0; background: none; border-radius: 4px; font-size: 11.5px; font-weight: 500; color: #8a9799; transition: color .15s; }
+  .vswitch-seg button.is-on { color: #3c4a4c; }
+  .vswitch-seg button:hover { color: #3c4a4c; }
+  .vswitch-seg button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(83,169,177,.35); }
+  .vswitch kbd { margin-right: 3px; padding: 0 5px; border: 1px solid #e3e9e9; border-radius: 4px; font: inherit; font-size: 10.5px; color: #9aa6a8; }
+
+  @media (max-width: 1100px) { .old-side { display: none; } .old-admin { right: 16px; } }
+  @media (max-width: 720px) {
+    .old-page { padding: 24px 16px 96px; }
+    .old-admin { display: none; }
+    .vswitch kbd { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="ms-app" x-data="inbox()" x-init="init()" @keydown.window="onKey($event)">
+  <aside class="ms-sidebar">
+    <a class="ms-logo" href="#"><svg class="ms-logo-svg" width="116" height="35" role="img" aria-label="Mokesčių SUFLERIS" viewBox="0 0 132 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"> <g id="MS_logo_white" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="Group" transform="translate(-5.000000, -4.000000)" fill="#FFFFFF"> <path d="M17.8828125,16.71875 C17.8828125,16.7708336 17.8684897,16.8177081 17.8398438,16.859375 C17.8111978,16.9010419 17.759115,16.9348957 17.6835938,16.9609375 C17.6080725,16.9869793 17.5078131,17.0078124 17.3828125,17.0234375 C17.2578119,17.0390626 17.0989593,17.046875 16.90625,17.046875 C16.7187491,17.046875 16.5625006,17.0390626 16.4375,17.0234375 C16.3124994,17.0078124 16.213542,16.9869793 16.140625,16.9609375 C16.067708,16.9348957 16.0156252,16.9010419 15.984375,16.859375 C15.9531248,16.8177081 15.9375,16.7708336 15.9375,16.71875 L15.9375,8.4921875 L15.921875,8.4921875 L12.9921875,16.7109375 C12.9713541,16.7786462 12.9375002,16.8346352 12.890625,16.8789062 C12.8437498,16.9231773 12.7799483,16.9583332 12.6992188,16.984375 C12.6184892,17.0104168 12.5156256,17.0273437 12.390625,17.0351562 C12.2656244,17.0429688 12.1145842,17.046875 11.9375,17.046875 C11.7604158,17.046875 11.6093756,17.0403646 11.484375,17.0273438 C11.3593744,17.0143229 11.2565108,16.9934897 11.1757812,16.9648438 C11.0950517,16.9361978 11.0312502,16.9010419 10.984375,16.859375 C10.9374998,16.8177081 10.9062501,16.7682295 10.890625,16.7109375 L8.0625,8.4921875 L8.046875,8.4921875 L8.046875,16.71875 C8.046875,16.7708336 8.03255223,16.8177081 8.00390625,16.859375 C7.97526027,16.9010419 7.92187539,16.9348957 7.84375,16.9609375 C7.76562461,16.9869793 7.6653652,17.0078124 7.54296875,17.0234375 C7.4205723,17.0390626 7.2630218,17.046875 7.0703125,17.046875 C6.88281156,17.046875 6.72656313,17.0390626 6.6015625,17.0234375 C6.47656187,17.0078124 6.37630246,16.9869793 6.30078125,16.9609375 C6.22526004,16.9348957 6.17317723,16.9010419 6.14453125,16.859375 C6.11588527,16.8177081 6.1015625,16.7708336 6.1015625,16.71875 L6.1015625,7.7109375 C6.1015625,7.44531117 6.1718743,7.2421882 6.3125,7.1015625 C6.4531257,6.9609368 6.64062383,6.890625 6.875,6.890625 L8.21875,6.890625 C8.45833453,6.890625 8.66406164,6.91015605 8.8359375,6.94921875 C9.00781336,6.98828145 9.15624937,7.05338496 9.28125,7.14453125 C9.40625063,7.23567754 9.51041625,7.35546801 9.59375,7.50390625 C9.67708375,7.65234449 9.74999969,7.83593641 9.8125,8.0546875 L12,14.078125 L12.03125,14.078125 L14.296875,8.0703125 C14.3645837,7.85156141 14.4388017,7.66666742 14.5195312,7.515625 C14.6002608,7.36458258 14.6940099,7.24218797 14.8007812,7.1484375 C14.9075526,7.05468703 15.0338534,6.98828145 15.1796875,6.94921875 C15.3255216,6.91015605 15.4947907,6.890625 15.6875,6.890625 L17.0703125,6.890625 C17.2109382,6.890625 17.3320307,6.90885398 17.4335938,6.9453125 C17.5351568,6.98177102 17.6184893,7.0351559 17.6835938,7.10546875 C17.7486982,7.1757816 17.7981769,7.26171824 17.8320312,7.36328125 C17.8658856,7.46484426 17.8828125,7.58072852 17.8828125,7.7109375 L17.8828125,16.71875 Z M32.1596875,11.828125 C32.1596875,12.6666709 32.0555219,13.4166634 31.8471875,14.078125 C31.6388531,14.7395866 31.3289604,15.3007789 30.9175,15.7617188 C30.5060396,16.2226586 29.9969301,16.5742175 29.3901563,16.8164062 C28.7833824,17.058595 28.0815665,17.1796875 27.2846875,17.1796875 C26.4982253,17.1796875 25.8120342,17.0768239 25.2260938,16.8710938 C24.6401533,16.6653636 24.151877,16.3515646 23.76125,15.9296875 C23.3706231,15.5078104 23.0776572,14.9713574 22.8823438,14.3203125 C22.6870303,13.6692676 22.589375,12.898442 22.589375,12.0078125 C22.589375,11.1901001 22.6935406,10.4544304 22.901875,9.80078125 C23.1102094,9.14713215 23.4201021,8.59114813 23.8315625,8.1328125 C24.2430229,7.67447687 24.7521324,7.32291789 25.3589063,7.078125 C25.9656801,6.83333211 26.6701002,6.7109375 27.4721875,6.7109375 C28.2378163,6.7109375 28.9135908,6.81249898 29.4995313,7.015625 C30.0854717,7.21875102 30.5750501,7.53124789 30.9682813,7.953125 C31.3615124,8.37500211 31.6583844,8.90754887 31.8589063,9.55078125 C32.0594281,10.1940136 32.1596875,10.9531206 32.1596875,11.828125 Z M30.0034375,11.9375 C30.0034375,11.4062473 29.9617713,10.9231793 29.8784375,10.4882812 C29.7951038,10.0533832 29.6531781,9.68099113 29.4526563,9.37109375 C29.2521344,9.06119637 28.98521,8.82161543 28.651875,8.65234375 C28.31854,8.48307207 27.9018775,8.3984375 27.401875,8.3984375 C26.8966642,8.3984375 26.4747934,8.49348863 26.13625,8.68359375 C25.7977067,8.87369887 25.5242719,9.12760258 25.3159375,9.4453125 C25.1076031,9.76302242 24.9604692,10.1341125 24.8745313,10.5585938 C24.7885933,10.983075 24.745625,11.4322893 24.745625,11.90625 C24.745625,12.4583361 24.7872913,12.9544249 24.870625,13.3945312 C24.9539588,13.8346376 25.0945824,14.2109359 25.2925,14.5234375 C25.4904177,14.8359391 25.75604,15.0742179 26.089375,15.2382812 C26.42271,15.4023446 26.8419767,15.484375 27.3471875,15.484375 C27.8523984,15.484375 28.2742692,15.3906259 28.6128125,15.203125 C28.9513559,15.0156241 29.2247906,14.7604183 29.433125,14.4375 C29.6414594,14.1145817 29.7885933,13.7382834 29.8745313,13.3085938 C29.9604692,12.8789041 30.0034375,12.4218774 30.0034375,11.9375 Z M44.2490625,16.6953125 C44.2490625,16.7526045 44.2347398,16.8033852 44.2060938,16.8476562 C44.1774478,16.8919273 44.1227609,16.9283853 44.0420313,16.9570312 C43.9613017,16.9856772 43.8506257,17.0078124 43.71,17.0234375 C43.5693743,17.0390626 43.3922928,17.046875 43.17875,17.046875 C42.8402067,17.046875 42.5967195,17.0338543 42.4482813,17.0078125 C42.299843,16.9817707 42.1930733,16.9427086 42.1279688,16.890625 C42.0628643,16.8385414 42.0120836,16.776042 41.975625,16.703125 L38.9209375,11.90625 L38.9209375,16.703125 C38.9209375,16.760417 38.9053127,16.8098956 38.8740625,16.8515625 C38.8428124,16.8932294 38.7881254,16.9283853 38.71,16.9570312 C38.6318746,16.9856772 38.527709,17.0078124 38.3975,17.0234375 C38.2672911,17.0390626 38.1006261,17.046875 37.8975,17.046875 C37.6995824,17.046875 37.5342195,17.0390626 37.4014063,17.0234375 C37.2685931,17.0078124 37.1631254,16.9856772 37.085,16.9570312 C37.0068746,16.9283853 36.9508856,16.8932294 36.9170313,16.8515625 C36.883177,16.8098956 36.86625,16.760417 36.86625,16.703125 L36.86625,7.1796875 C36.86625,7.12239555 36.883177,7.07291687 36.9170313,7.03125 C36.9508856,6.98958312 37.0068746,6.9557293 37.085,6.9296875 C37.1631254,6.9036457 37.2685931,6.88281258 37.4014063,6.8671875 C37.5342195,6.85156242 37.6995824,6.84375 37.8975,6.84375 C38.1006261,6.84375 38.2672911,6.85156242 38.3975,6.8671875 C38.527709,6.88281258 38.6318746,6.9036457 38.71,6.9296875 C38.7881254,6.9557293 38.8428124,6.98958312 38.8740625,7.03125 C38.9053127,7.07291687 38.9209375,7.12239555 38.9209375,7.1796875 L38.9209375,11.484375 L41.881875,7.1875 C41.9183336,7.11979133 41.9626039,7.0638023 42.0146875,7.01953125 C42.0667711,6.9752602 42.1344788,6.9401043 42.2178125,6.9140625 C42.3011463,6.8880207 42.4079161,6.86979172 42.538125,6.859375 C42.668334,6.84895828 42.834999,6.84375 43.038125,6.84375 C43.2464594,6.84375 43.4183327,6.85156242 43.55375,6.8671875 C43.6891674,6.88281258 43.7972392,6.90494777 43.8779688,6.93359375 C43.9586984,6.96223973 44.0146874,6.99739562 44.0459375,7.0390625 C44.0771877,7.08072938 44.0928125,7.12760391 44.0928125,7.1796875 C44.0928125,7.26822961 44.0693753,7.35937453 44.0225,7.453125 C43.9756248,7.54687547 43.887084,7.69531148 43.756875,7.8984375 L40.9834375,11.53125 L44.006875,16.1015625 C44.1214589,16.3151052 44.1904687,16.4570309 44.2139063,16.5273438 C44.2373439,16.5976566 44.2490625,16.6536456 44.2490625,16.6953125 Z M54.5884376,16.1953125 C54.5884376,16.3463549 54.5819272,16.4726557 54.5689063,16.5742188 C54.5558854,16.6757818 54.5363544,16.7578122 54.5103126,16.8203125 C54.4842708,16.8828128 54.451719,16.9283853 54.4126563,16.9570312 C54.3735936,16.9856772 54.3306253,17 54.2837501,17 L49.2056251,17 C49.0337492,17 48.8892194,16.9492193 48.7720313,16.8476562 C48.6548432,16.7460932 48.5962501,16.5807303 48.5962501,16.3515625 L48.5962501,7.5390625 C48.5962501,7.30989469 48.6548432,7.14453176 48.7720313,7.04296875 C48.8892194,6.94140574 49.0337492,6.890625 49.2056251,6.890625 L54.2525001,6.890625 C54.2993753,6.890625 54.3410415,6.9036457 54.3775001,6.9296875 C54.4139586,6.9557293 54.4452083,7.00130176 54.4712501,7.06640625 C54.4972919,7.13151074 54.5168229,7.21484324 54.5298438,7.31640625 C54.5428647,7.41796926 54.5493751,7.54687422 54.5493751,7.703125 C54.5493751,7.84895906 54.5428647,7.97265574 54.5298438,8.07421875 C54.5168229,8.17578176 54.4972919,8.25781219 54.4712501,8.3203125 C54.4452083,8.38281281 54.4139586,8.42838527 54.3775001,8.45703125 C54.3410415,8.48567723 54.2993753,8.5 54.2525001,8.5 L50.6431251,8.5 L50.6431251,10.96875 L53.6978126,10.96875 C53.7446878,10.96875 53.7876561,10.9830728 53.8267188,11.0117188 C53.8657815,11.0403647 53.8983333,11.0846351 53.9243751,11.1445312 C53.9504169,11.2044274 53.9699479,11.2851557 53.9829688,11.3867188 C53.9959897,11.4882818 54.0025001,11.6119784 54.0025001,11.7578125 C54.0025001,11.9088549 53.9959897,12.0338537 53.9829688,12.1328125 C53.9699479,12.2317713 53.9504169,12.3111976 53.9243751,12.3710938 C53.8983333,12.4309899 53.8657815,12.4739582 53.8267188,12.5 C53.7876561,12.5260418 53.7446878,12.5390625 53.6978126,12.5390625 L50.6431251,12.5390625 L50.6431251,15.390625 L54.2837501,15.390625 C54.3306253,15.390625 54.3735936,15.4049478 54.4126563,15.4335938 C54.451719,15.4622397 54.4842708,15.5078122 54.5103126,15.5703125 C54.5363544,15.6328128 54.5558854,15.7148432 54.5689063,15.8164062 C54.5819272,15.9179693 54.5884376,16.0442701 54.5884376,16.1953125 Z M65.2168751,13.96875 C65.2168751,14.5000027 65.1179177,14.9661438 64.9200001,15.3671875 C64.7220824,15.7682312 64.4538559,16.1028632 64.1153126,16.3710938 C63.7767692,16.6393243 63.3809398,16.8411452 62.9278126,16.9765625 C62.4746853,17.1119798 61.9903152,17.1796875 61.4746876,17.1796875 C61.1257275,17.1796875 60.801512,17.151042 60.5020313,17.09375 C60.2025507,17.036458 59.9382304,16.9674483 59.7090626,16.8867188 C59.4798948,16.8059892 59.2884904,16.7213546 59.1348438,16.6328125 C58.9811972,16.5442704 58.8705212,16.4661462 58.8028126,16.3984375 C58.7351039,16.3307288 58.6869273,16.2330736 58.6582813,16.1054688 C58.6296353,15.9778639 58.6153126,15.794272 58.6153126,15.5546875 C58.6153126,15.3932284 58.6205209,15.257813 58.6309376,15.1484375 C58.6413543,15.039062 58.6582812,14.9505212 58.6817188,14.8828125 C58.7051564,14.8151038 58.7364061,14.7669272 58.7754688,14.7382812 C58.8145315,14.7096353 58.860104,14.6953125 58.9121876,14.6953125 C58.9851046,14.6953125 59.0879682,14.7382808 59.2207813,14.8242188 C59.3535945,14.9101567 59.5241657,15.0052078 59.7325001,15.109375 C59.9408345,15.2135422 60.1895299,15.3085933 60.4785938,15.3945312 C60.7676578,15.4804692 61.1022898,15.5234375 61.4825001,15.5234375 C61.7325013,15.5234375 61.9564574,15.4934899 62.1543751,15.4335938 C62.3522927,15.3736976 62.5202598,15.289063 62.6582813,15.1796875 C62.7963028,15.070312 62.9017705,14.9348966 62.9746876,14.7734375 C63.0476046,14.6119784 63.0840626,14.4322927 63.0840626,14.234375 C63.0840626,14.0052072 63.0215632,13.8085946 62.8965626,13.6445312 C62.771562,13.4804679 62.6088032,13.3346361 62.4082813,13.2070312 C62.2077595,13.0794264 61.9798972,12.959636 61.7246876,12.8476562 C61.469478,12.7356765 61.2064598,12.6171881 60.9356251,12.4921875 C60.6647904,12.3671869 60.4017722,12.2252612 60.1465626,12.0664062 C59.891353,11.9075513 59.6634907,11.717449 59.4629688,11.4960938 C59.262447,11.2747385 59.0996882,11.0130223 58.9746876,10.7109375 C58.849687,10.4088527 58.7871876,10.0468771 58.7871876,9.625 C58.7871876,9.14062258 58.8770304,8.71484559 59.0567188,8.34765625 C59.2364072,7.98046691 59.4785923,7.67578246 59.7832813,7.43359375 C60.0879703,7.19140504 60.4473418,7.01041727 60.8614063,6.890625 C61.2754709,6.77083273 61.7142686,6.7109375 62.1778126,6.7109375 C62.4173971,6.7109375 62.656978,6.72916648 62.8965626,6.765625 C63.1361471,6.80208352 63.3601032,6.85156219 63.5684376,6.9140625 C63.776772,6.97656281 63.9616659,7.04687461 64.1231251,7.125 C64.2845842,7.20312539 64.391354,7.26822891 64.4434376,7.3203125 C64.4955212,7.37239609 64.5306771,7.41666648 64.5489063,7.453125 C64.5671356,7.48958352 64.5827604,7.53776012 64.5957813,7.59765625 C64.6088022,7.65755238 64.6179167,7.73307246 64.6231251,7.82421875 C64.6283334,7.91536504 64.6309376,8.02864516 64.6309376,8.1640625 C64.6309376,8.31510492 64.6270314,8.44270781 64.6192188,8.546875 C64.6114063,8.65104219 64.5983856,8.73697883 64.5801563,8.8046875 C64.5619271,8.87239617 64.5358857,8.92187484 64.5020313,8.953125 C64.468177,8.98437516 64.4226045,9 64.3653126,9 C64.3080206,9 64.2168757,8.96354203 64.0918751,8.890625 C63.9668745,8.81770797 63.8132302,8.73828168 63.6309376,8.65234375 C63.448645,8.56640582 63.2377096,8.4882816 62.9981251,8.41796875 C62.7585405,8.3476559 62.4955223,8.3125 62.2090626,8.3125 C61.9851031,8.3125 61.7897926,8.33984348 61.6231251,8.39453125 C61.4564576,8.44921902 61.3171361,8.5247391 61.2051563,8.62109375 C61.0931766,8.7174484 61.0098441,8.83333266 60.9551563,8.96875 C60.9004686,9.10416734 60.8731251,9.24739508 60.8731251,9.3984375 C60.8731251,9.62239695 60.9343224,9.81640543 61.0567188,9.98046875 C61.1791153,10.1445321 61.3431761,10.2903639 61.5489063,10.4179688 C61.7546365,10.5455736 61.9877071,10.665364 62.2481251,10.7773438 C62.508543,10.8893235 62.7741654,11.0078119 63.0450001,11.1328125 C63.3158348,11.2578131 63.5814571,11.3997388 63.8418751,11.5585938 C64.102293,11.7174487 64.3340616,11.907551 64.5371876,12.1289062 C64.7403136,12.3502615 64.9043745,12.6106756 65.0293751,12.9101562 C65.1543757,13.2096369 65.2168751,13.562498 65.2168751,13.96875 Z M76.7593751,15.46875 C76.7593751,15.598959 76.7554689,15.709635 76.7476563,15.8007812 C76.7398438,15.8919275 76.7281252,15.9700518 76.7125001,16.0351562 C76.696875,16.1002607 76.6760419,16.1562498 76.6500001,16.203125 C76.6239583,16.2500002 76.582292,16.3033851 76.5250001,16.3632812 C76.4677081,16.4231774 76.3570322,16.4999995 76.1929688,16.59375 C76.0289055,16.6875005 75.8283867,16.7773433 75.5914063,16.8632812 C75.354426,16.9492192 75.0835954,17.020833 74.7789063,17.078125 C74.4742173,17.135417 74.1447935,17.1640625 73.7906251,17.1640625 C73.0979133,17.1640625 72.4729195,17.0572927 71.9156251,16.84375 C71.3583306,16.6302073 70.884377,16.3112 70.4937501,15.8867188 C70.1031231,15.4622375 69.803647,14.9322948 69.5953126,14.296875 C69.3869782,13.6614552 69.2828126,12.9218792 69.2828126,12.078125 C69.2828126,11.2187457 69.3973948,10.4557325 69.6265626,9.7890625 C69.8557304,9.1223925 70.1760397,8.56250227 70.5875001,8.109375 C70.9989605,7.65624773 71.4924451,7.31250117 72.0679688,7.078125 C72.6434926,6.84374883 73.2776008,6.7265625 73.9703126,6.7265625 C74.251564,6.7265625 74.5223946,6.74999977 74.7828126,6.796875 C75.0432306,6.84375023 75.2841136,6.90494754 75.5054688,6.98046875 C75.7268241,7.05598996 75.9260409,7.14322867 76.1031251,7.2421875 C76.2802093,7.34114633 76.403906,7.4257809 76.4742188,7.49609375 C76.5445317,7.5664066 76.5927083,7.62499977 76.6187501,7.671875 C76.6447919,7.71875023 76.665625,7.77864547 76.6812501,7.8515625 C76.6968752,7.92447953 76.7085938,8.01041617 76.7164063,8.109375 C76.7242189,8.20833383 76.7281251,8.33072844 76.7281251,8.4765625 C76.7281251,8.63281328 76.7229168,8.76562445 76.7125001,8.875 C76.7020834,8.98437555 76.6838544,9.07291633 76.6578126,9.140625 C76.6317708,9.20833367 76.6005211,9.25781234 76.5640626,9.2890625 C76.5276041,9.32031266 76.4859378,9.3359375 76.4390626,9.3359375 C76.3609372,9.3359375 76.2619799,9.29036504 76.1421876,9.19921875 C76.0223953,9.10807246 75.867449,9.00651098 75.6773438,8.89453125 C75.4872387,8.78255152 75.2606785,8.68099004 74.9976563,8.58984375 C74.7346342,8.49869746 74.4208353,8.453125 74.0562501,8.453125 C73.6552064,8.453125 73.2971371,8.53515543 72.9820313,8.69921875 C72.6669256,8.86328207 72.3986991,9.09765473 72.1773438,9.40234375 C71.9559886,9.70703277 71.7880215,10.0755187 71.6734376,10.5078125 C71.5588537,10.9401063 71.5015626,11.4270806 71.5015626,11.96875 C71.5015626,12.562503 71.5627599,13.0768207 71.6851563,13.5117188 C71.8075528,13.9466168 71.9820302,14.3046861 72.2085938,14.5859375 C72.4351575,14.8671889 72.7085922,15.0768222 73.0289063,15.2148438 C73.3492204,15.3528653 73.7098939,15.421875 74.1109376,15.421875 C74.4755228,15.421875 74.7906238,15.3789067 75.0562501,15.2929688 C75.3218764,15.2070308 75.5497387,15.1119797 75.7398438,15.0078125 C75.929949,14.9036453 76.0861974,14.8098963 76.2085938,14.7265625 C76.3309903,14.6432287 76.4260414,14.6015625 76.4937501,14.6015625 C76.5458337,14.6015625 76.5874999,14.6119791 76.6187501,14.6328125 C76.6500003,14.6536459 76.6760417,14.6953122 76.6968751,14.7578125 C76.7177085,14.8203128 76.7333334,14.9075515 76.7437501,15.0195312 C76.7541668,15.131511 76.7593751,15.2812491 76.7593751,15.46875 Z M73.5796876,6.171875 C73.4130201,6.171875 73.2723965,6.16927086 73.1578126,6.1640625 C73.0432287,6.15885414 72.9455734,6.14453137 72.8648438,6.12109375 C72.7841143,6.09765613 72.7138025,6.0638023 72.6539063,6.01953125 C72.5940102,5.9752602 72.5302088,5.91927117 72.4625001,5.8515625 L70.9156251,4.1796875 C70.8479164,4.10156211 70.8075522,4.03776066 70.7945313,3.98828125 C70.7815104,3.93880184 70.7971353,3.9010418 70.8414063,3.875 C70.8856774,3.8489582 70.9638016,3.83072922 71.0757813,3.8203125 C71.1877611,3.80989578 71.3322909,3.8046875 71.5093751,3.8046875 C71.7229178,3.8046875 71.8973953,3.80859371 72.0328126,3.81640625 C72.1682299,3.82421879 72.2763018,3.83723949 72.3570313,3.85546875 C72.4377609,3.87369801 72.5002603,3.89843734 72.5445313,3.9296875 C72.5888024,3.96093766 72.6317707,3.99999977 72.6734376,4.046875 L73.5953126,5.1171875 L74.5562501,4.0625 C74.597917,4.01041641 74.6408853,3.96744809 74.6851563,3.93359375 C74.7294274,3.89973941 74.7919268,3.87369801 74.8726563,3.85546875 C74.9533859,3.83723949 75.0588536,3.82421879 75.1890626,3.81640625 C75.3192716,3.80859371 75.493749,3.8046875 75.7125001,3.8046875 C75.8895843,3.8046875 76.0302079,3.81119785 76.1343751,3.82421875 C76.2385423,3.83723965 76.3127603,3.85807277 76.3570313,3.88671875 C76.4013024,3.91536473 76.4169272,3.95442684 76.4039063,4.00390625 C76.3908854,4.05338566 76.3557295,4.11197883 76.2984376,4.1796875 L74.7750001,5.8515625 C74.7177081,5.91927117 74.6552088,5.97395812 74.5875001,6.015625 C74.5197914,6.05729188 74.4403651,6.08984363 74.3492188,6.11328125 C74.2580726,6.13671887 74.1513028,6.15234371 74.0289063,6.16015625 C73.9065099,6.16796879 73.7567718,6.171875 73.5796876,6.171875 Z M83.2784376,16.71875 C83.2784376,16.7708336 83.2615107,16.8177081 83.2276564,16.859375 C83.193802,16.9010419 83.137813,16.9348957 83.0596876,16.9609375 C82.9815622,16.9869793 82.8773966,17.0078124 82.7471876,17.0234375 C82.6169786,17.0390626 82.4503136,17.046875 82.2471876,17.046875 C82.04927,17.046875 81.883907,17.0390626 81.7510939,17.0234375 C81.6182807,17.0078124 81.512813,16.9869793 81.4346876,16.9609375 C81.3565622,16.9348957 81.3005732,16.9010419 81.2667189,16.859375 C81.2328645,16.8177081 81.2159376,16.7708336 81.2159376,16.71875 L81.2159376,7.171875 C81.2159376,7.11979141 81.2328645,7.07291687 81.2667189,7.03125 C81.3005732,6.98958312 81.3578643,6.9557293 81.4385939,6.9296875 C81.5193234,6.9036457 81.6247911,6.88281258 81.7550001,6.8671875 C81.8852091,6.85156242 82.04927,6.84375 82.2471876,6.84375 C82.4503136,6.84375 82.6169786,6.85156242 82.7471876,6.8671875 C82.8773966,6.88281258 82.9815622,6.9036457 83.0596876,6.9296875 C83.137813,6.9557293 83.193802,6.98958312 83.2276564,7.03125 C83.2615107,7.07291687 83.2784376,7.11979141 83.2784376,7.171875 L83.2784376,16.71875 Z M96.7115626,13.234375 C96.7115626,13.9375035 96.5969804,14.5520807 96.3678126,15.078125 C96.1386448,15.6041693 95.7870858,16.0442691 95.3131251,16.3984375 C95.1881245,16.492188 95.0800527,16.5742184 94.9889064,16.6445312 C94.8977601,16.7148441 94.8105214,16.786458 94.7271876,16.859375 C94.6438539,16.932292 94.5592193,17.0104162 94.4732814,17.09375 C94.3873435,17.1770838 94.2844799,17.2786452 94.1646876,17.3984375 L93.8756251,17.6796875 C93.7714579,17.7838547 93.7024482,17.8802079 93.6685939,17.96875 C93.6347395,18.0572921 93.6178126,18.130208 93.6178126,18.1875 C93.6178126,18.3020839 93.6568747,18.3867185 93.7350001,18.4414062 C93.8131255,18.496094 93.9355201,18.5234375 94.1021876,18.5234375 L94.8678126,18.5234375 C94.9146879,18.5234375 94.9537501,18.5299479 94.9850001,18.5429688 C95.0162503,18.5559896 95.0422917,18.580729 95.0631251,18.6171875 C95.0839586,18.653646 95.0982813,18.7057288 95.1060939,18.7734375 C95.1139064,18.8411462 95.1178126,18.9270828 95.1178126,19.03125 C95.1178126,19.1406255 95.1126044,19.2317705 95.1021876,19.3046875 C95.0917709,19.3776045 95.074844,19.4374998 95.0514064,19.484375 C95.0279688,19.5312502 94.9967191,19.5677082 94.9576564,19.59375 C94.9185937,19.6197918 94.8730212,19.6406249 94.8209376,19.65625 C94.6282283,19.7239587 94.4159909,19.7734373 94.1842189,19.8046875 C93.9524469,19.8359377 93.695939,19.8515625 93.4146876,19.8515625 C92.8678099,19.8515625 92.4381267,19.7447927 92.1256251,19.53125 C91.8131236,19.3177073 91.6568751,18.9921897 91.6568751,18.5546875 C91.6568751,18.4765621 91.6633855,18.3945317 91.6764064,18.3085938 C91.6894273,18.2226558 91.7167708,18.1315109 91.7584376,18.0351562 C91.8001045,17.9388016 91.8560935,17.8385422 91.9264064,17.734375 C91.9967192,17.6302078 92.0917704,17.5182298 92.2115626,17.3984375 L92.4928126,17.1171875 C92.4615625,17.1223959 92.4238024,17.1276041 92.3795314,17.1328125 C92.3352603,17.1380209 92.2844796,17.140625 92.2271876,17.140625 C91.8938526,17.140625 91.5683351,17.1093753 91.2506251,17.046875 C90.9329152,16.9843747 90.633439,16.8880215 90.3521876,16.7578125 C90.0709362,16.6276035 89.8144284,16.4609385 89.5826564,16.2578125 C89.3508844,16.0546865 89.1516676,15.8111993 88.9850001,15.5273438 C88.8183326,15.2434882 88.6881256,14.9179706 88.5943751,14.5507812 C88.5006247,14.1835919 88.4537501,13.7734398 88.4537501,13.3203125 L88.4537501,7.15625 C88.4537501,7.10416641 88.469375,7.05859395 88.5006251,7.01953125 C88.5318753,6.98046855 88.5878643,6.9479168 88.6685939,6.921875 C88.7493235,6.8958332 88.8547911,6.87630215 88.9850001,6.86328125 C89.1152091,6.85026035 89.2818741,6.84375 89.4850001,6.84375 C89.6829178,6.84375 89.8469786,6.85026035 89.9771876,6.86328125 C90.1073966,6.87630215 90.2115622,6.8958332 90.2896876,6.921875 C90.367813,6.9479168 90.423802,6.98046855 90.4576564,7.01953125 C90.4915107,7.05859395 90.5084376,7.10416641 90.5084376,7.15625 L90.5084376,13.171875 C90.5084376,13.562502 90.5579163,13.9036444 90.6568751,14.1953125 C90.755834,14.4869806 90.8977596,14.7278636 91.0826564,14.9179688 C91.2675531,15.1080739 91.4889051,15.2513016 91.7467189,15.3476562 C92.0045327,15.4440109 92.2922902,15.4921875 92.6100001,15.4921875 C92.9329184,15.4921875 93.221978,15.4427088 93.4771876,15.34375 C93.7323972,15.2447912 93.9485409,15.1002614 94.1256251,14.9101562 C94.3027094,14.7200511 94.4394267,14.4856785 94.5357814,14.2070312 C94.632136,13.928384 94.6803126,13.6119809 94.6803126,13.2578125 L94.6803126,7.15625 C94.6803126,7.10416641 94.6959375,7.05859395 94.7271876,7.01953125 C94.7584378,6.98046855 94.8131247,6.9479168 94.8912501,6.921875 C94.9693755,6.8958332 95.0748432,6.87630215 95.2076564,6.86328125 C95.3404695,6.85026035 95.5084366,6.84375 95.7115626,6.84375 C95.9094803,6.84375 96.0722391,6.85026035 96.1998439,6.86328125 C96.3274487,6.87630215 96.4290102,6.8958332 96.5045314,6.921875 C96.5800526,6.9479168 96.6334375,6.98046855 96.6646876,7.01953125 C96.6959378,7.05859395 96.7115626,7.10416641 96.7115626,7.15625 L96.7115626,13.234375 Z" id="MOKESČIŲ"></path> <path d="M16.963,27.804 C16.5376645,27.262664 15.9818368,26.8325016 15.2955,26.5135 C14.6091632,26.1944984 13.9470032,26.035 13.309,26.035 C12.9803317,26.035 12.646835,26.0639997 12.3085,26.122 C11.970165,26.1800003 11.665668,26.2911658 11.395,26.4555 C11.124332,26.6198342 10.8971676,26.8324987 10.7135,27.0935 C10.5298324,27.3545013 10.438,27.687998 10.438,28.094 C10.438,28.4420017 10.5104993,28.7319988 10.6555,28.964 C10.8005007,29.1960012 11.0131653,29.3989991 11.2935,29.573 C11.5738347,29.7470009 11.9073314,29.9064993 12.294,30.0515 C12.6806686,30.1965007 13.1156642,30.3463326 13.599,30.501 C14.2950035,30.7330012 15.0199962,30.9891653 15.774,31.2695 C16.5280038,31.5498347 17.2143302,31.9219977 17.833,32.386 C18.4516698,32.8500023 18.963998,33.4251632 19.37,34.1115 C19.776002,34.7978368 19.979,35.6533282 19.979,36.678 C19.979,37.8573392 19.7615022,38.8771624 19.3265,39.7375 C18.8914978,40.5978376 18.3066703,41.3083305 17.572,41.869 C16.8373297,42.4296695 15.9963381,42.845332 15.049,43.116 C14.1016619,43.386668 13.1253384,43.522 12.12,43.522 C10.6506593,43.522 9.22967353,43.2658359 7.857,42.7535 C6.48432647,42.2411641 5.34367121,41.5113381 4.435,40.564 L7.683,37.258 C8.18566918,37.8766698 8.84782922,38.3938313 9.6695,38.8095 C10.4911708,39.2251687 11.3079959,39.433 12.12,39.433 C12.4873352,39.433 12.8449983,39.3943337 13.193,39.317 C13.5410017,39.2396663 13.8454987,39.1140009 14.1065,38.94 C14.3675013,38.7659991 14.5753326,38.5340015 14.73,38.244 C14.8846674,37.9539986 14.962,37.606002 14.962,37.2 C14.962,36.8133314 14.8653343,36.484668 14.672,36.214 C14.4786657,35.943332 14.2031685,35.6968344 13.8455,35.4745 C13.4878315,35.2521656 13.0431693,35.0491676 12.5115,34.8655 C11.9798307,34.6818324 11.37567,34.4836677 10.699,34.271 C10.0416634,34.0583323 9.39883647,33.8070015 8.7705,33.517 C8.14216353,33.2269986 7.58150246,32.8548356 7.0885,32.4005 C6.59549753,31.9461644 6.19916816,31.3951699 5.8995,30.7475 C5.59983183,30.0998301 5.45,29.3120046 5.45,28.384 C5.45,27.2433276 5.68199768,26.2670041 6.146,25.455 C6.61000232,24.6429959 7.21899623,23.9760026 7.973,23.454 C8.72700377,22.9319974 9.57766193,22.5501679 10.525,22.3085 C11.4723381,22.0668321 12.4293285,21.946 13.396,21.946 C14.5560058,21.946 15.7401606,22.1586645 16.9485,22.584 C18.1568394,23.0093355 19.2153288,23.6376625 20.124,24.469 L16.963,27.804 Z M40.656,35.257 C40.656,36.4943395 40.4481687,37.6204949 40.0325,38.6355 C39.6168313,39.6505051 39.0223372,40.5204964 38.249,41.2455 C37.4756628,41.9705036 36.5428388,42.535998 35.4505,42.942 C34.3581612,43.348002 33.1450067,43.551 31.811,43.551 C30.4576599,43.551 29.2396721,43.348002 28.157,42.942 C27.0743279,42.535998 26.1560038,41.9705036 25.402,41.2455 C24.6479962,40.5204964 24.068002,39.6505051 23.662,38.6355 C23.255998,37.6204949 23.053,36.4943395 23.053,35.257 L23.053,22.468 L27.983,22.468 L27.983,34.851 C27.983,35.4116695 28.0554993,35.9433308 28.2005,36.446 C28.3455007,36.9486692 28.5678318,37.3981647 28.8675,37.7945 C29.1671682,38.1908353 29.5634975,38.5049988 30.0565,38.737 C30.5495025,38.9690012 31.1439965,39.085 31.84,39.085 C32.5360035,39.085 33.1304975,38.9690012 33.6235,38.737 C34.1165025,38.5049988 34.5176651,38.1908353 34.827,37.7945 C35.1363349,37.3981647 35.358666,36.9486692 35.494,36.446 C35.629334,35.9433308 35.697,35.4116695 35.697,34.851 L35.697,22.468 L40.656,22.468 L40.656,35.257 Z M49.559,26.702 L49.559,30.936 L57.505,30.936 L57.505,35.025 L49.559,35.025 L49.559,43 L44.658,43 L44.658,22.468 L58.172,22.468 L58.172,26.702 L49.559,26.702 Z M61.362,43 L61.362,22.468 L66.35,22.468 L66.35,38.679 L74.296,38.679 L74.296,43 L61.362,43 Z M76.616,43 L76.616,22.468 L90.42,22.468 L90.42,26.673 L81.401,26.673 L81.401,30.53 L89.927,30.53 L89.927,34.503 L81.401,34.503 L81.401,38.766 L90.942,38.766 L90.942,43 L76.616,43 Z M105.21,43 L100.773,34.851 L99.091,34.851 L99.091,43 L94.219,43 L94.219,22.468 L102.049,22.468 C103.035005,22.468 103.996829,22.569499 104.9345,22.7725 C105.872171,22.975501 106.713163,23.3186643 107.4575,23.802 C108.201837,24.2853358 108.796331,24.9233294 109.241,25.716 C109.685669,26.5086706 109.908,27.4946608 109.908,28.674 C109.908,30.066007 109.531004,31.2356619 108.777,32.183 C108.022996,33.1303381 106.979007,33.806998 105.645,34.213 L111.01,43 L105.21,43 Z M105.007,28.761 C105.007,28.2776643 104.905501,27.8861682 104.7025,27.5865 C104.499499,27.2868318 104.238502,27.0548342 103.9195,26.8905 C103.600498,26.7261658 103.242835,26.6150003 102.8465,26.557 C102.450165,26.4989997 102.068335,26.47 101.701,26.47 L99.062,26.47 L99.062,31.255 L101.411,31.255 C101.817002,31.255 102.232665,31.221167 102.658,31.1535 C103.083335,31.085833 103.469998,30.9650009 103.818,30.791 C104.166002,30.6169991 104.451166,30.3656683 104.6735,30.037 C104.895834,29.7083317 105.007,29.2830026 105.007,28.761 Z M113.446,43 L113.446,22.468 L118.434,22.468 L118.434,43 L113.446,43 Z M133.514,27.804 C133.088665,27.262664 132.532837,26.8325016 131.8465,26.5135 C131.160163,26.1944984 130.498003,26.035 129.86,26.035 C129.531332,26.035 129.197835,26.0639997 128.8595,26.122 C128.521165,26.1800003 128.216668,26.2911658 127.946,26.4555 C127.675332,26.6198342 127.448168,26.8324987 127.2645,27.0935 C127.080832,27.3545013 126.989,27.687998 126.989,28.094 C126.989,28.4420017 127.061499,28.7319988 127.2065,28.964 C127.351501,29.1960012 127.564165,29.3989991 127.8445,29.573 C128.124835,29.7470009 128.458331,29.9064993 128.845,30.0515 C129.231669,30.1965007 129.666664,30.3463326 130.15,30.501 C130.846003,30.7330012 131.570996,30.9891653 132.325,31.2695 C133.079004,31.5498347 133.76533,31.9219977 134.384,32.386 C135.00267,32.8500023 135.514998,33.4251632 135.921,34.1115 C136.327002,34.7978368 136.53,35.6533282 136.53,36.678 C136.53,37.8573392 136.312502,38.8771624 135.8775,39.7375 C135.442498,40.5978376 134.85767,41.3083305 134.123,41.869 C133.38833,42.4296695 132.547338,42.845332 131.6,43.116 C130.652662,43.386668 129.676338,43.522 128.671,43.522 C127.201659,43.522 125.780674,43.2658359 124.408,42.7535 C123.035326,42.2411641 121.894671,41.5113381 120.986,40.564 L124.234,37.258 C124.736669,37.8766698 125.398829,38.3938313 126.2205,38.8095 C127.042171,39.2251687 127.858996,39.433 128.671,39.433 C129.038335,39.433 129.395998,39.3943337 129.744,39.317 C130.092002,39.2396663 130.396499,39.1140009 130.6575,38.94 C130.918501,38.7659991 131.126333,38.5340015 131.281,38.244 C131.435667,37.9539986 131.513,37.606002 131.513,37.2 C131.513,36.8133314 131.416334,36.484668 131.223,36.214 C131.029666,35.943332 130.754168,35.6968344 130.3965,35.4745 C130.038832,35.2521656 129.594169,35.0491676 129.0625,34.8655 C128.530831,34.6818324 127.92667,34.4836677 127.25,34.271 C126.592663,34.0583323 125.949836,33.8070015 125.3215,33.517 C124.693164,33.2269986 124.132502,32.8548356 123.6395,32.4005 C123.146498,31.9461644 122.750168,31.3951699 122.4505,30.7475 C122.150832,30.0998301 122.001,29.3120046 122.001,28.384 C122.001,27.2433276 122.232998,26.2670041 122.697,25.455 C123.161002,24.6429959 123.769996,23.9760026 124.524,23.454 C125.278004,22.9319974 126.128662,22.5501679 127.076,22.3085 C128.023338,22.0668321 128.980328,21.946 129.947,21.946 C131.107006,21.946 132.291161,22.1586645 133.4995,22.584 C134.707839,23.0093355 135.766329,23.6376625 136.675,24.469 L133.514,27.804 Z" id="SUFLERIS"></path> </g> </g> </svg><em class="ms-logo-pro">PRO</em></a>
+    <ul class="ms-nav">
+      <li><a href="#">Šiandien SUFLERYJE</a></li>
+      <li><a href="#" class="is-active" @click.prevent="goList()">Mokesčių naujienos <span class="ms-badge" x-ref="badge" x-show="unreadCount" x-text="unreadCount"></span></a></li>
+      <li><a href="#">Praktinės situacijos <span class="ms-count">14 720</span></a></li>
+      <li><a href="#">Sąvadai ir teminiai rinkiniai</a></li>
+      <li><a href="#">Seminarai ir vaizdo įrašai</a></li>
+      <li><a href="#">Renginių kalendorius</a></li>
+      <li><a href="#">Skaičiuoklės</a></li>
+      <li><a href="#">Testai</a></li>
+      <li><a href="#">Tinklalaidės</a></li>
+      <li><a href="#">Trumpai</a></li>
+      <li><a href="#">Užduokite klausimą</a></li>
+    </ul>
+    <div class="ms-nav-sep"></div>
+    <ul class="ms-nav">
+      <li><a href="#"><span><svg class="ms-pro-svg" width="30" height="13" role="img" aria-label="PRO" viewBox="0 0 30 13" fill="none" xmlns="http://www.w3.org/2000/svg"> <path opacity="0.15" fill-rule="evenodd" clip-rule="evenodd" d="M0 0.026001L29.5 0L26.1099 12.0022H0V0.026001Z" fill="#B85399"/> <path d="M5.91443 3.06439C6.91588 3.06439 7.64518 3.25536 8.10236 3.63731C8.55954 4.01926 8.78813 4.60593 8.78813 5.39733C8.78813 6.18872 8.55332 6.76775 8.0837 7.13442C7.61408 7.50109 6.89722 7.68443 5.93309 7.68443H5.06539V9.47194H3.60988V3.06439H5.91443ZM6.04506 6.44692C6.53023 6.44692 6.85989 6.35067 7.03406 6.15816C7.20822 5.96566 7.2953 5.68455 7.2953 5.31483C7.2953 4.9451 7.18178 4.68232 6.95475 4.52649C6.72771 4.37065 6.37473 4.29273 5.89577 4.29273H5.06539V6.44692H6.04506ZM15.2166 5.19107C15.2166 6.21775 14.803 6.88081 13.9757 7.18025L15.6272 9.47194H13.8358L12.3896 7.42776H11.3819V9.47194H9.92641V3.06439H12.3989C13.4128 3.06439 14.1359 3.23245 14.5682 3.56856C15.0005 3.90468 15.2166 4.44551 15.2166 5.19107ZM12.4456 6.19025C12.9432 6.19025 13.2822 6.1108 13.4626 5.95191C13.6429 5.79302 13.7331 5.54094 13.7331 5.19566C13.7331 4.85038 13.6398 4.61357 13.4532 4.48524C13.2666 4.3569 12.9401 4.29273 12.4736 4.29273H11.3819V6.19025H12.4456ZM21.7011 6.23608C21.7011 5.66163 21.5145 5.17274 21.1413 4.7694C20.7681 4.36607 20.3094 4.1644 19.7651 4.1644C19.2208 4.1644 18.7621 4.36607 18.3889 4.7694C18.0157 5.17274 17.8291 5.6601 17.8291 6.2315C17.8291 6.80289 18.0157 7.28873 18.3889 7.68901C18.7621 8.08929 19.2208 8.28943 19.7651 8.28943C20.3094 8.28943 20.7681 8.08929 21.1413 7.68901C21.5145 7.28873 21.7011 6.80442 21.7011 6.23608ZM22.1956 8.59193C21.5363 9.22138 20.7245 9.5361 19.7604 9.5361C18.7963 9.5361 17.9846 9.21986 17.3252 8.58735C16.6659 7.95484 16.3362 7.16804 16.3362 6.22691C16.3362 5.28579 16.6659 4.49899 17.3252 3.86648C17.9846 3.23397 18.7963 2.91772 19.7604 2.91772C20.7245 2.91772 21.5363 3.23397 22.1956 3.86648C22.8549 4.49899 23.1846 5.28579 23.1846 6.22691C23.1846 7.16804 22.8549 7.95637 22.1956 8.59193Z" fill="#B85399"/> </svg><b style="font-weight:600">turinys</b></span></a></li>
+      <li><a href="#">Kompetencijų centras</a></li>
+      <li><a href="#">Geroji praktika</a></li>
+      <li><a href="#">PRO mikroskopą</a></li>
+      <li><a href="#">PRO komentarai</a></li>
+      <li><a href="#">Profilaktika</a></li>
+    </ul>
+  </aside>
+
+  <div class="ms-main">
+    <header class="ms-topbar">
+      <div class="ms-gsearch" :class="{ 'is-focus': gFocus }" @click="$refs.g.focus()" role="search">
+        <span class="ms-scope" x-show="isScoped">
+          <span class="is-long">Mokesčių naujienos</span><span class="is-short">Naujienos</span>
+          <button type="button" @click.stop="removeScope()" aria-label="Ieškoti visame Sufleryje">
+            <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 1l6 6M7 1L1 7"/></svg>
+          </button>
+        </span>
+        <input x-ref="g" id="gsearch" type="search" x-model="q" autocomplete="off"
+               :placeholder="isScoped ? 'Ieškoti naujienose' : 'Ieškoti pagal frazę'"
+               :aria-label="isScoped ? 'Ieškoti Mokesčių naujienose' : 'Paieška visame Sufleryje'"
+               @focus="gFocus=true" @blur="gFocus=false"
+               @keydown.backspace="if (!q && isScoped) removeScope()"
+               @keydown.escape="q=''; $el.blur()"
+               @keydown.enter="if (!isScoped && q.trim()) showToast('Paieška visame Sufleryje prototipe neveikia', null, null)">
+        <button type="button" class="ms-gclear" x-show="q" x-cloak @click.stop="q=''; $refs.g.focus()" aria-label="Išvalyti">✕</button>
+        <svg width="16" height="16" fill="none" stroke="#00555a" stroke-width="2"><circle cx="6.5" cy="6.5" r="5.5"/><path d="M10.5 10.5l4.5 4.5" stroke-linecap="round"/></svg>
+        <div class="ms-gdrop" x-show="gFocus && !scoped && view === 'nauja'" x-cloak>
+          <button type="button" @mousedown.prevent="scoped = true">
+            Ieškoti tik <span class="ms-scope">Mokesčių naujienose</span>
+          </button>
+        </div>
+      </div>
+      <nav class="ms-topnav">
+        <a href="#"><svg width="20" height="20" fill="none" stroke="#00555a" stroke-width="1.8"><path d="M4 3h4l2 5-2.5 1.5a11 11 0 005 5L14 12l5 2v4a2 2 0 01-2 2A16 16 0 012 5a2 2 0 012-2z"/></svg><span>Susisiekti</span></a>
+        <a href="#"><svg width="20" height="20" fill="none" stroke="#00555a" stroke-width="1.6"><path d="M3 3v15M17 3v15M3 7h14M3 11h14M3 15h14"/></svg><span>Kainos ir planai</span></a>
+        <a href="#"><svg width="20" height="20" fill="none" stroke="#0f5354" stroke-width="1.8"><circle cx="10" cy="10" r="9"/><circle cx="10" cy="8" r="3"/><path d="M4.5 16c1.4-2.2 3.2-3.2 5.5-3.2s4.1 1 5.5 3.2"/></svg><span>Audrius</span></a>
+      </nav>
+    </header>
+
+    <div class="nx" x-show="view === 'nauja'" :class="{ 'is-open': mobileOpen }">
+      <!-- ===== Sąrašas ===== -->
+      <section class="nx-list" aria-label="Naujienų sąrašas">
+        <div class="nx-head">
+          <div class="nx-title">
+            <h1>Mokesčių naujienos</h1>
+          </div>
+          <div class="nx-tabs" role="tablist">
+            <button role="tab" class="is-unread" :class="{ 'is-on': tab==='unread' }" @click="setTab('unread')"><i class="nx-dot" x-show="unreadCount" aria-hidden="true"></i>Neperskaitytos <b class="is-hot" x-show="unreadCount" x-text="unreadCount"></b></button>
+            <button role="tab" :class="{ 'is-on': tab==='all' }" @click="setTab('all')">Visos</button>
+            <button role="tab" :class="{ 'is-on': tab==='read' }" @click="setTab('read')">Perskaitytos</button>
+          </div>
+        </div>
+
+        <div class="nx-scroll" x-ref="scroll">
+          <template x-for="g in groups" :key="g.key">
+            <div>
+              <div class="nx-group" x-text="g.label"></div>
+              <template x-for="n in g.items" :key="n.id">
+                <div class="nx-row" tabindex="0" :data-id="n.id"
+                     :class="{ 'is-sel': selId===n.id, 'is-read': isRead(n) }"
+                     @click="open(n)" @keydown.enter.prevent="open(n)">
+                  <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-pop': pop==='l'+n.id }"
+                          :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
+                          @click.stop="toggle(n, 'l')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()" @focus="$event.target.matches(':focus-visible') && showTip($event, n, true)" @blur="hideTip()">
+                    <svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>
+                  </button>
+                  <div style="min-width:0">
+                    <h3 x-text="n.title"></h3>
+                    <div class="nx-meta"><span x-text="n.date"></span><span class="nx-tag" x-text="n.tag"></span><span class="nx-saved" x-show="saved[n.id]" x-cloak aria-label="Išsaugota"><svg width="11" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M5 2h14v21l-7-5.8L5 23z"/></svg></span></div>
+                    <p class="nx-sum" x-text="n.summary"></p>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <div class="nx-end" x-show="tab==='all' && !sq && list.length" x-cloak>
+            <svg width="40" height="36" viewBox="0 0 40 36" fill="none" stroke="#9fb9bb" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="34" height="9" rx="2" fill="#f6fafa"/>
+              <path d="M6 12v18a3 3 0 003 3h22a3 3 0 003-3V12"/>
+              <path d="M15 19h10" stroke-linecap="round"/>
+            </svg>
+            <strong>Senesnės naujienos laukia archyve</strong>
+            <p>Sąraše rodome paskutinių 3 mėnesių naujienas. Ankstesnes greitai rasite per paiešką.</p>
+            <button type="button" @click="focusSearch()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="6" cy="6" r="5"/><path d="M10 10l3.5 3.5" stroke-linecap="round"/></svg>
+              Ieškoti senesnių naujienų
+            </button>
+          </div>
+
+          <div class="nx-none" x-show="!list.length" x-cloak>
+            <template x-if="sq"><div><strong>Nieko nerasta</strong>Pagal „<span x-text="q"></span>“ Mokesčių naujienose nieko nėra.</div></template>
+            <template x-if="!sq && tab==='unread'"><div><strong>Neperskaitytų nebėra</strong>Visos naujienos peržiūrėtos.</div></template>
+            <template x-if="!sq && tab==='read'"><div><strong>Dar nieko nepažymėjote</strong>Paspauskite varnelę prie naujienos.</div></template>
+          </div>
+        </div>
+
+        <div class="nx-keys"><span><kbd>J</kbd> <kbd>K</kbd> naršyti</span><span><kbd>X</kbd> susipažinau</span></div>
+      </section>
+
+      <!-- ===== Atidaryta naujiena ===== -->
+      <section class="nx-reader" aria-label="Naujiena">
+        <template x-if="sel">
+          <div style="display:contents">
+            <!-- Susipažinau valdiklis vidiniame puslapyje kol kas nuimtas; žymima per sąrašo checkbox arba X -->
+            <div class="nx-bar">
+              <button class="nx-back" @click="mobileOpen=false">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg>Naujienos
+              </button>
+              <span class="nx-pos" x-text="posLabel"></span>
+              <button class="nx-iconbtn" @click="step(-1)" :disabled="posIndex<=0" aria-label="Ankstesnė naujiena">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l4-4 4 4"/></svg>
+              </button>
+              <button class="nx-iconbtn" @click="step(1)" :disabled="posIndex>=list.length-1" aria-label="Kita naujiena">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5l4 4 4-4"/></svg>
+              </button>
+            </div>
+
+            <div class="nx-doc" x-ref="doc">
+              <article class="nx-article">
+                <div class="nx-ahead">
+                  <div class="nx-meta"><span class="nx-tag" x-text="sel.tag"></span><span x-text="sel.date"></span></div>
+                  <div class="nx-tools">
+                    <button type="button" class="nx-tool" @click="share(sel)" aria-label="Pasidalinti"
+                            @mouseenter="showTip($event, sel, false, 'Pasidalinti')" @mouseleave="hideTip()">
+                      <svg viewBox="0 0 24 24"><path d="M14 5l6 5.5-6 5.5v-3.2c-4.6-.2-7.6 1.3-10 4.7.6-5.3 3.6-9.4 10-10z"/></svg>
+                    </button>
+                    <button type="button" class="nx-tool" :class="{ 'is-on': saved[sel.id], 'is-pop': pop==='s'+sel.id }" @click="toggleSave(sel)"
+                            :aria-pressed="!!saved[sel.id]" :aria-label="saved[sel.id] ? 'Pašalinti iš išsaugotų' : 'Išsaugoti'"
+                            @mouseenter="showTip($event, sel, false, saved[sel.id] ? 'Pašalinti iš išsaugotų' : 'Išsaugoti')" @mouseleave="hideTip()">
+                      <svg viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-4.6-5.5 4.6z"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <h2 x-text="sel.title"></h2>
+                <div class="nx-src">Šaltinis: <span x-text="sel.source"></span></div>
+                <div class="nx-body">
+                  <template x-for="(p, i) in sel.body" :key="i"><p x-text="p"></p></template>
+                </div>
+                <div class="nx-acts" x-show="sel.acts && sel.acts.length">
+                  <h4>Susiję teisės aktai</h4>
+                  <ul><template x-for="a in sel.acts" :key="a"><li><a href="#" x-text="a"></a></li></template></ul>
+                </div>
+              </article>
+            </div>
+          </div>
+        </template>
+
+        <template x-if="!sel">
+          <div class="nx-empty">
+            <div class="nx-empty-in" x-show="unreadCount">
+              <svg width="72" height="64" viewBox="0 0 72 64" fill="none" stroke="#9fb9bb" stroke-width="2" stroke-linejoin="round">
+                <path d="M14 6h44l10 28v20a4 4 0 01-4 4H8a4 4 0 01-4-4V34z" fill="#f6fafa"/>
+                <path d="M4 34h18l4 8h20l4-8h18"/>
+                <path d="M24 16h24M22 24h28" stroke-linecap="round"/>
+              </svg>
+              <strong x-text="'Turite ' + unreadCount + ' ' + plural(unreadCount, 'neperskaitytą mokesčių naujieną', 'neperskaitytas mokesčių naujienas', 'neperskaitytų mokesčių naujienų')"></strong>
+              <p>Pasirinkite naujieną iš sąrašo arba pradėkite nuo naujausios.</p>
+              <button class="nx-next" @click="openNextUnread()">Atidaryti naujausią</button>
+            </div>
+            <div class="nx-empty-in" x-show="!unreadCount" x-cloak>
+              <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="32" r="29" fill="#e4f3f4" stroke="#3e9aa2" stroke-width="2"/>
+                <path d="M20 33l8 8 16-17" stroke="#3e9aa2" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <strong>Viskas perskaityta</strong>
+              <p>Naujos mokesčių naujienos atsiras čia, kai tik jas paskelbsime.</p>
+            </div>
+          </div>
+        </template>
+      </section>
+    </div>
+
+    <!-- ===== „Sena“ versija: dabartinė skiltis + vidinis puslapis ===== -->
+    <div class="old" x-show="view === 'sena'" x-cloak x-ref="old" :data-tab="oldTab">
+      <!-- Sąrašas -->
+      <div class="old-page" x-show="!oldSel">
+        <div class="old-main">
+          <h1 class="old-h1">Mokesčių naujienos
+            <span class="old-info" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+              <button type="button" class="old-info-btn" :class="{ 'is-on': open }" @click="open = !open" aria-label="Kaip tai veikia?" :aria-expanded="open.toString()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="6.25"/><path d="M7 6.2v3.6"/><circle cx="7" cy="4.2" r=".4" fill="currentColor"/></svg>
+              </button>
+              <span class="old-info-pop" x-show="open" x-cloak x-transition.opacity.scale.96.origin.top.left.duration.150ms role="dialog" aria-label="Kaip tai veikia?">
+                <strong>Kaip tai veikia?</strong>
+                Susipažinkite su mokesčių naujienomis patogiu ir laiką taupančiu formatu. Čia rasite aktualias mokesčių naujienas ir susijusius teisės aktus. Pažymėkite naujieną, kai su ja susipažinsite, ir tikrai nieko svarbaus nepraleisite.
+              </span>
+            </span>
+          </h1>
+
+          <!-- Tab'ai. Pažymėta naujiena po animacijos sklandžiai persikelia į kitą tab'ą (be perkrovimo). -->
+          <div class="old-tabs" role="tablist">
+            <button type="button" role="tab" class="is-unread" :class="{ 'is-on': oldTab === 'unread' }" :aria-selected="(oldTab === 'unread').toString()" @click="setOldTab('unread')">
+              <i class="nx-dot" x-show="unreadCount" aria-hidden="true"></i>Neperskaitytos <b class="is-hot" x-show="unreadCount" x-text="unreadCount"></b>
+            </button>
+            <button type="button" role="tab" :class="{ 'is-on': oldTab === 'all' }" :aria-selected="(oldTab === 'all').toString()" @click="setOldTab('all')">Visos</button>
+            <button type="button" role="tab" :class="{ 'is-on': oldTab === 'read' }" :aria-selected="(oldTab === 'read').toString()" @click="setOldTab('read')">Perskaitytos</button>
+          </div>
+
+          <div class="old-empty" x-show="!oldList.length" x-cloak>
+            <template x-if="oldTab === 'unread'">
+              <div class="old-empty-in">
+                <svg class="old-empty-ill is-done" width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="32" cy="32" r="29"/>
+                  <path d="M20 33l8 8 16-17"/>
+                </svg>
+                <strong>Viskas perskaityta</strong>
+                <p>Naujos mokesčių naujienos atsiras čia, kai tik jas paskelbsime.</p>
+                <button type="button" class="old-more" @click="setOldTab('all')">Rodyti visas naujienas <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg></button>
+              </div>
+            </template>
+            <template x-if="oldTab === 'read'">
+              <div class="old-empty-in">
+                <svg class="old-empty-ill" width="72" height="64" viewBox="0 0 72 64" fill="none" aria-hidden="true">
+                  <path class="tray" d="M14 6h44l10 28v20a4 4 0 01-4 4H8a4 4 0 01-4-4V34z"/>
+                  <path d="M4 34h18l4 8h20l4-8h18"/>
+                  <path d="M24 16h24M22 24h28"/>
+                </svg>
+                <strong>Dar nieko nepažymėjote</strong>
+                <p>Pažymėkite naujieną, kai su ja susipažinsite, ir ji atsiras čia.</p>
+                <button type="button" class="old-more" @click="setOldTab('unread')">Į neperskaitytas <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg></button>
+              </div>
+            </template>
+          </div>
+
+          <template x-for="n in oldVisible" :key="n.id">
+            <div class="old-item" :data-id="n.id" :class="{ 'is-read': isRead(n) }">
+              <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='o'+n.id }"
+                      :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
+                      @click="toggle(n, 'o')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"
+                      @focus="$event.target.matches(':focus-visible') && showTip($event, n, true)" @blur="hideTip()">
+                <svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>
+              </button>
+              <div style="min-width:0">
+                <h3 x-text="n.title" @click="openOld(n)"></h3>
+                <div class="nx-meta"><span x-text="n.date"></span><span class="nx-tag" x-text="n.tag"></span></div>
+                <p class="old-sum" x-text="n.body.join(' ')"></p>
+                <button type="button" class="old-more" @click="openOld(n)">Skaityti plačiau
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- Neperskaitytos = eilė: be puslapių numerių, visos viename puslapyje (iki 50), toliau „Rodyti dar“ (cursor) -->
+          <div class="old-queue-end" x-show="oldTab === 'unread' && oldList.length">
+            <button type="button" class="old-load-more" x-show="oldList.length > oldLimit" @click="oldLimit += 50">Rodyti dar 50</button>
+            <span x-show="oldList.length <= oldLimit">Daugiau neperskaitytų naujienų nėra.</span>
+          </div>
+
+          <!-- Visos / Perskaitytos = archyvas: įprastas puslapiavimas su numeriais -->
+          <nav class="old-pager" aria-label="Puslapiai" x-show="oldTab !== 'unread' && oldList.length">
+            <button type="button" class="is-on" aria-current="page">1</button>
+            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">2</button>
+            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">3</button>
+            <span aria-hidden="true">…</span>
+            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)" x-text="oldTab === 'all' ? 92 : 78"></button>
+            <button type="button" class="old-pager-next" aria-label="Kitas puslapis" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
+            </button>
+          </nav>
+        </div>
+
+        <aside class="old-side">
+          <a href="#" class="old-card" @click.prevent="showToast('Testas prototipe neatsidaro', null, null)">
+            <div class="old-card-img" aria-hidden="true">
+              <div class="old-card-paper"><span>2026</span><strong>09-01</strong><i></i><i style="width:70%"></i></div>
+            </div>
+            <div class="old-card-body">
+              <small>TESTAS • 2026-09-01</small>
+              <strong>Mokesčių naujienų testas</strong>
+              <span>6 klausimai</span>
+            </div>
+          </a>
+        </aside>
+      </div>
+
+      <!-- Vidinis puslapis -->
+      <template x-if="oldSel">
+        <div class="old-page">
+          <article class="old-art">
+            <button type="button" class="old-ack" :class="{ 'is-on': isRead(oldSel) }" :aria-pressed="isRead(oldSel)" @click="toggle(oldSel, 'p')">
+              <span class="ck" :class="{ 'is-on': isRead(oldSel), 'is-muted': isMuted(oldSel), 'is-pop': pop==='p'+oldSel.id }" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>
+              </span>
+              <span class="old-ack-txt" x-text="isRead(oldSel) ? 'Susipažinta' : 'Pažymėti kaip skaitytą'"></span>
+            </button>
+
+            <div class="old-art-meta">
+              <span x-text="oldSel.date + ' | MOKESČIŲ NAUJIENA | Skaitymo trukmė ' + readMin(oldSel) + ' min.'"></span>
+              <div class="nx-tools">
+                <button type="button" class="nx-tool" @click="share(oldSel)" aria-label="Pasidalinti"
+                        @mouseenter="showTip($event, oldSel, false, 'Pasidalinti')" @mouseleave="hideTip()">
+                  <svg viewBox="0 0 24 24"><path d="M14 5l6 5.5-6 5.5v-3.2c-4.6-.2-7.6 1.3-10 4.7.6-5.3 3.6-9.4 10-10z"/></svg>
+                </button>
+                <button type="button" class="nx-tool" :class="{ 'is-on': saved[oldSel.id], 'is-pop': pop==='s'+oldSel.id }" @click="toggleSave(oldSel)"
+                        :aria-pressed="!!saved[oldSel.id]" :aria-label="saved[oldSel.id] ? 'Pašalinti iš išsaugotų' : 'Išsaugoti'"
+                        @mouseenter="showTip($event, oldSel, false, saved[oldSel.id] ? 'Pašalinti iš išsaugotų' : 'Išsaugoti')" @mouseleave="hideTip()">
+                  <svg viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-4.6-5.5 4.6z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <h1 x-text="oldSel.title"></h1>
+            <div class="nx-body">
+              <template x-for="(p, i) in oldSel.body" :key="i"><p x-text="p"></p></template>
+            </div>
+          </article>
+
+          <div class="old-admin" aria-label="Administravimo įrankiai">
+            <button type="button" aria-label="Redaguoti" @mouseenter="showTip($event, oldSel, false, 'Redaguoti')" @mouseleave="hideTip()">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13.5 3.5l3 3L7 16l-4 1 1-4z"/></svg>
+            </button>
+            <button type="button" aria-label="Statistika" @mouseenter="showTip($event, oldSel, false, 'Statistika')" @mouseleave="hideTip()">
+              <svg width="20" height="20" fill="currentColor"><rect x="4" y="9" width="3" height="8" rx="1"/><rect x="9" y="4" width="3" height="13" rx="1"/><rect x="14" y="11" width="3" height="6" rx="1"/></svg>
+            </button>
+            <button type="button" aria-label="Ekspertų patikrinta" @mouseenter="showTip($event, oldSel, false, 'Ekspertų patikrinta')" @mouseleave="hideTip()">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="10" cy="8" r="5"/><path d="M7 12.5L6 18l4-2 4 2-1-5.5"/><path d="M8 8l1.5 1.5L12.5 6.5" stroke-linecap="round"/></svg>
+            </button>
+            <button type="button" aria-label="Komentarai" @mouseenter="showTip($event, oldSel, false, 'Komentarai')" @mouseleave="hideTip()">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 4h14v10H8l-5 3.5z"/></svg>
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <div class="tip" role="tooltip" :class="{ 'is-on': tip.id }" x-cloak :style="`left:${tip.x}px; top:${tip.y}px`" x-text="tipText"></div>
+
+  <div class="toast" x-show="toast" x-cloak
+       x-transition:enter="fade-enter" x-transition:enter-start="toast-start" x-transition:enter-end="fade-end"
+       x-transition:leave="fade-enter" x-transition:leave-start="fade-end" x-transition:leave-end="toast-start">
+    <span x-text="toast && toast.text"></span>
+    <button x-show="toast && toast.id" @click="undo()">Atšaukti</button>
+  </div>
+
+  <!-- Admin: versijos perjungėjas (tik prototipui) -->
+  <div class="vswitch" role="group" aria-label="Versija">
+    <span class="vswitch-label"><i aria-hidden="true"></i>Versija</span>
+    <div class="vswitch-seg" :class="{ 'is-new': view === 'nauja' }">
+      <button type="button" :class="{ 'is-on': view === 'sena' }" :aria-pressed="view === 'sena'" @click="setView('sena')">Dabartinė</button>
+      <button type="button" :class="{ 'is-on': view === 'nauja' }" :aria-pressed="view === 'nauja'" @click="setView('nauja')">Nauja</button>
+    </div>
+    <kbd title="Perjungti klavišu V">V</kbd>
+  </div>
+</div>
+
+<script>
+  const NEWS = [
+    { id: 1, date: '2026-10-06', tag: 'PVM', source: 'VMI',
+      title: 'VMI patikslino PVM sąskaitų faktūrų išrašymo avansams terminus',
+      summary: 'Gavus avansą, PVM sąskaita faktūra turi būti išrašyta ne vėliau kaip per 10 dienų nuo avanso gavimo, net jei prekės dar nepristatytos.',
+      body: [
+        'VMI paskelbė patikslintą komentarą dėl PVM sąskaitų faktūrų išrašymo, kai pirkėjas sumoka avansą. Komentare pabrėžiama, kad prievolė apskaičiuoti PVM atsiranda avanso gavimo dieną, todėl sąskaita faktūra turi būti išrašyta ne vėliau kaip per 10 dienų.',
+        'Jei avansas gaunamas mėnesio pabaigoje, o prekės pristatomos kitą mėnesį, PVM turi būti deklaruojamas už tą mokestinį laikotarpį, kurį gautas avansas. Vėliau, patiekus prekes, išrašoma galutinė sąskaita, kurioje avanso suma ir jam tenkantis PVM atimami.',
+        'Patikslinimas aktualus statybų, baldų gamybos ir kitoms įmonėms, kurios dažnai dirba su išankstiniais mokėjimais.'
+      ],
+      acts: ['PVM įstatymo 14 straipsnis', 'PVM įstatymo 80 straipsnio komentaras'] },
+    { id: 2, date: '2026-10-03', tag: 'Socialinis draudimas', source: 'Sodra',
+      title: 'Sodra paskelbė 2027 metų draudžiamųjų pajamų dydžius',
+      summary: 'Einamųjų metų draudžiamųjų pajamų dydis 2027 m. sieks 1 214 Eur, o maksimali įmokų bazė bus 60 VDU per metus.',
+      body: [
+        'Vyriausybė patvirtino 2027 metų draudžiamųjų pajamų dydžius. Einamųjų metų draudžiamųjų pajamų (EMDP) dydis sieks 1 214 Eur, o tai tiesiogiai lems pensijų ir kitų išmokų dydžius.',
+        'Maksimali valstybinio socialinio draudimo įmokų bazė, kaip ir anksčiau, bus 60 vidutinių darbo užmokesčių per metus. Šią ribą viršijus, pensijų ir kitų socialinio draudimo įmokos nuo viršijančios sumos nebeskaičiuojamos.',
+        'Savarankiškai dirbantiems asmenims minimali įmokų bazė taip pat keisis, todėl metų pabaigoje verta perskaičiuoti planuojamas įmokas.'
+      ],
+      acts: ['Valstybinio socialinio draudimo įstatymas', 'Vyriausybės nutarimas dėl 2027 m. draudžiamųjų pajamų'] },
+    { id: 3, date: '2026-09-30', tag: 'Ne DU GPM deklaravimas', source: 'VMI',
+      title: 'VMI paskelbė progresinio GPM skaičiuoklę 2026 metams',
+      summary: 'Mokesčių administratorius savo tinklalapyje paskelbė naują skaičiuoklę, skirtą gyventojų GPM apskaičiuoti, taikant progresinius GPM tarifus.',
+      body: [
+        'Mokesčių administratorius savo tinklalapyje paskelbė naują skaičiuoklę, skirtą gyventojų GPM apskaičiuoti, taikant progresinius GPM tarifus. Gyventojai turi galimybę iš anksto pasitikrinti, kokie GPM tarifai bus taikomi ir kokios GPM sumos bus apskaičiuotos deklaruojant 2026 metų pajamas.',
+        'Skaičiuoklėje atskirai nurodomos su darbo santykiais susijusios pajamos ir kitos pajamos, pavyzdžiui, iš individualios veiklos, nuomos ar turto pardavimo. Įvedus sumas, matyti, kokia dalis apmokestinama 20, 25 ar 32 procentų tarifu.',
+        'Skaičiuoklė yra informacinio pobūdžio, galutinė GPM suma apskaičiuojama pateikus metinę pajamų deklaraciją.'
+      ],
+      acts: ['GPM įstatymo 6 straipsnis'] },
+    { id: 4, date: '2026-09-23', tag: 'Aplinkosauga', source: 'Aplinkos ministerija',
+      title: 'Nuo 2026-10-01 naikinamas taršos mokestis akumuliatoriams ir baterijoms',
+      summary: 'Akumuliatoriai ir galvaniniai elementai (baterijos) atleidžiami nuo mokesčio už aplinkos teršimą.',
+      body: [
+        'Akumuliatoriai ir galvaniniai elementai (baterijos) atleidžiami nuo mokesčio už aplinkos teršimą. Mokestis neskaičiuojamas už visus 2026 ir vėlesnius metus.',
+        'Gamintojai ir importuotojai, jau sumokėję mokestį už 2026 metus, gali kreiptis dėl permokos grąžinimo arba įskaitymo.'
+      ],
+      acts: ['Mokesčio už aplinkos teršimą įstatymas'] },
+    { id: 5, date: '2026-09-17', tag: 'Pelno mokestis', source: 'VMI',
+      title: 'Paskelbtas PMĮ komentaras apie pozityviųjų pajamų apmokestinimą',
+      summary: 'Pozityviosios pajamos – tai LT įmonės kontroliuojamų užsienio vienetų tikslinėse teritorijose uždirbtos pajamos.',
+      body: [
+        'Pozityviosios pajamos – tai LT įmonės kontroliuojamų užsienio vienetų tikslinėse teritorijose uždirbtos pajamos ir kontroliuojamųjų užsienio subjektų (užsienio vienetų ar nuolatinių buveinių) pasyviosios pajamos, kurios turi būti įtraukiamos į LT įmonės apmokestinamąsias pajamas.',
+        'Komentare pateikiami pavyzdžiai, kaip nustatyti kontrolę, kaip apskaičiuoti įtrauktinas pajamas ir kada taikomos išimtys, kai užsienio vienetas vykdo realią ekonominę veiklą.'
+      ],
+      acts: ['PMĮ 39 straipsnis', 'PMĮ 39 straipsnio komentaras'] },
+    { id: 6, date: '2026-09-10', tag: 'Pelno mokestis', source: 'VMI',
+      title: 'Pakeistas PMĮ 55 straipsnio komentaras dėl užsienyje sumokėto PM atskaitymo',
+      summary: 'Šio straipsnio komentaras ilgai nebuvo skelbiamas, tačiau dabartinė redakcija nedaug skiriasi nuo ankstesnės.',
+      body: [
+        'Paskelbtas PMĮ 55 straipsnio, kuris nustato užsienyje sumokėto pelno mokesčio atskaitymo Lietuvoje taisykles, komentaras. Šio straipsnio komentaras ilgai nebuvo skelbiamas, tačiau dabartinė redakcija nedaug skiriasi nuo ankstesnės.',
+        'Svarbiausias patikslinimas susijęs su dokumentais, kuriais įrodomas užsienyje sumokėtas mokestis: dabar aiškiai nurodyta, kad tinka ir elektroniniai užsienio mokesčių administratoriaus išrašai.'
+      ],
+      acts: ['PMĮ 55 straipsnis'] },
+    { id: 7, date: '2026-09-08', tag: 'Akcizai', source: 'Seimas',
+      title: 'Seimas pritarė akcizų tabako gaminiams didinimui nuo 2027 metų',
+      summary: 'Cigarečių akcizas didės palaipsniui, o kaitinamajam tabakui ir elektroninių cigarečių skysčiams nustatyti nauji tarifai.',
+      body: [
+        'Seimas priėmė Akcizų įstatymo pataisas, kuriomis nuo 2027 metų palaipsniui didinami akcizai tabako gaminiams. Cigarečių akcizo minimalus dydis per trejus metus padidės maždaug penktadaliu.',
+        'Kaitinamajam tabakui ir elektroninių cigarečių skysčiams nustatyti atskiri tarifai, kurie bus taikomi nuo 2027 m. kovo 1 d.'
+      ],
+      acts: ['Akcizų įstatymas'] },
+    { id: 8, date: '2026-09-04', tag: 'GPM', source: 'VMI',
+      title: 'Patvirtinta nauja GPM313 formos pildymo taisyklių redakcija',
+      summary: 'Nuo 2026 m. lapkričio GPM313 formoje atsiras atskiri laukai pajamoms iš platformų ir kriptoturto.',
+      body: [
+        'VMI viršininko įsakymu patvirtinta nauja GPM313 formos pildymo taisyklių redakcija. Ji bus taikoma deklaruojant išmokas, išmokėtas nuo 2026 m. lapkričio 1 d.',
+        'Formoje atsiras atskiri pajamų rūšių kodai pajamoms, gautoms per skaitmenines platformas, ir pajamoms iš kriptoturto. Mokesčių agentams rekomenduojama iš anksto atnaujinti apskaitos programas.'
+      ],
+      acts: ['GPM313 formos pildymo taisyklės'] },
+    { id: 9, date: '2026-09-01', tag: 'NT mokestis', source: 'VMI',
+      title: 'Paaiškinta, kaip skaičiuoti NT mokestį pakeitus pastato paskirtį',
+      summary: 'Jei paskirtis pakeista metų viduryje, mokestis skaičiuojamas proporcingai pagal kiekvienos paskirties laikotarpį.',
+      body: [
+        'VMI paaiškino, kaip apskaičiuoti nekilnojamojo turto mokestį, kai metų viduryje Nekilnojamojo turto registre pakeičiama pastato paskirtis, pavyzdžiui, iš gyvenamosios į komercinę.',
+        'Mokestis skaičiuojamas proporcingai pagal tai, kiek mėnesių turtas turėjo kiekvieną paskirtį. Mokestinė vertė nustatoma pagal tą paskirtį, kuri įregistruota mėnesio pirmąją dieną.'
+      ],
+      acts: ['NT mokesčio įstatymo 5 straipsnis'] },
+    { id: 10, date: '2026-08-28', tag: 'Mokesčių administravimas', source: 'VMI',
+      title: 'Atnaujintos palūkanų normos už mokestinę nepriemoką',
+      summary: 'Nuo spalio 1 d. taikoma 0,03 proc. per dieną delspinigių norma, apskaičiuota pagal naujausias EURIBOR reikšmes.',
+      body: [
+        'Finansų ministras patvirtino naują delspinigių normą, kuri bus taikoma nuo 2026 m. spalio 1 d. iki gruodžio 31 d. Norma siekia 0,03 procento už kiekvieną uždelstą dieną.',
+        'Norma perskaičiuojama kas ketvirtį pagal EURIBOR reikšmes, todėl mokesčių mokėtojams, turintiems mokestinių nepriemokų, verta pasitikrinti sumas Mano VMI.'
+      ],
+      acts: ['Mokesčių administravimo įstatymo 99 straipsnis'] }
+  ];
+
+  const MONTHS = ['Sausis','Vasaris','Kovas','Balandis','Gegužė','Birželis','Liepa','Rugpjūtis','Rugsėjis','Spalis','Lapkritis','Gruodis'];
+  const TODAY = '2026-10-07';
+  const STORE = 'ms-naujienos-read-v1';
+
+  function inbox() {
+    return {
+      items: NEWS,
+      read: {},
+      saved: {},
+      tab: 'unread',
+      q: '',
+      scoped: true,
+      gFocus: false,
+      selId: null,
+      keep: {},
+      pop: null,
+      toast: null,
+      toastTimer: null,
+      advanceTimer: null,
+      tip: { id: null, x: 0, y: 0 },
+      tipTimer: null,
+      tipWarmUntil: 0,
+      mobileOpen: false,
+      noHint: false,
+      view: 'nauja',
+      oldSelId: null,
+      oldTab: 'unread',
+      oldIds: [],
+      oldLimit: 50,
+      oldFresh: {},
+
+      init() {
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
+        this.read = saved || { 4: '2026-09-24', 7: '2026-09-09', 9: '2026-09-02', 10: '2026-08-29' };
+        try { this.saved = JSON.parse(localStorage.getItem(STORE + '-saved')) || {}; } catch (e) {}
+        const fromHash = location.hash.replace('#', '');
+        let savedView = null;
+        try { savedView = localStorage.getItem(STORE + '-view'); } catch (e) {}
+        this.view = ['sena', 'nauja'].includes(fromHash) ? fromHash : (savedView === 'sena' ? 'sena' : 'nauja');
+        this.oldTab = this.unreadCount ? 'unread' : 'all';
+        this.snapshotOld();
+      },
+
+      // ---------- Versijos perjungėjas ----------
+      setView(v) {
+        if (this.view === v) return;
+        this.view = v;
+        this.hideTip();
+        if (v === 'sena') { this.oldTab = this.unreadCount ? 'unread' : 'all'; this.snapshotOld(); }
+        try { localStorage.setItem(STORE + '-view', v); } catch (e) {}
+        try { history.replaceState(null, '', '#' + v); } catch (e) {}
+      },
+      get isScoped() { return this.scoped && this.view === 'nauja'; },
+
+      // ---------- „Sena“ versija ----------
+      // Imituoja puslapio užkrovimą: sąrašas sudaromas tik perjungiant tab'ą / versiją
+      // „Nugesinta“ varnelė: perskaityta anksčiau (ne šią sesiją / ne nuo paskutinio tab'o atidarymo)
+      isMuted(n) { return !!this.read[n.id] && !this.oldFresh[n.id]; },
+      snapshotOld() {
+        this.oldFresh = {};
+        const pick = { unread: n => !this.read[n.id], read: n => !!this.read[n.id], all: () => true }[this.oldTab];
+        this.oldIds = this.items.filter(pick).map(n => n.id);
+      },
+      setOldTab(t) {
+        this.oldTab = t;
+        this.oldSelId = null;
+        this.oldLimit = 50;
+        this.snapshotOld();
+        this.$nextTick(() => { this.$refs.old.scrollTop = 0; });
+      },
+      // Po pažymėjimo: jei naujiena nebetinka aktyviam tab'ui, ji sklandžiai išeina;
+      // jei atšaukta (vėl tinka), grąžinama į savo vietą sąraše.
+      oldAfterToggle(n, on) {
+        const fits = this.oldTab === 'all' || (this.oldTab === 'unread' && !on) || (this.oldTab === 'read' && on);
+        const listed = this.oldIds.includes(n.id);
+        if (!fits && listed) setTimeout(() => this.oldLeave(n.id, on), 650);
+        if (fits && !listed) this.oldIds = this.items.filter(x => x.id === n.id || this.oldIds.includes(x.id)).map(x => x.id);
+      },
+      oldLeave(id, wasOn) {
+        if (!!this.read[id] !== wasOn) return;
+        const drop = () => { this.oldIds = this.oldIds.filter(x => x !== id); };
+        const el = this.$refs.old.querySelector('.old-item[data-id="' + id + '"]');
+        if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return drop();
+        el.style.height = el.offsetHeight + 'px';
+        el.offsetHeight;
+        el.classList.add('is-leaving');
+        el.style.height = '0px';
+        setTimeout(() => { el.classList.remove('is-leaving'); el.style.height = ''; drop(); }, 360);
+      },
+      nudgeBadge() {
+        const el = this.$refs.badge;
+        if (!el) return;
+        setTimeout(() => {
+          el.classList.remove('is-nudge');
+          el.offsetWidth;
+          el.classList.add('is-nudge');
+        }, 250);
+      },
+      get oldVisible() { return this.oldTab === 'unread' ? this.oldList.slice(0, this.oldLimit) : this.oldList; },
+      get oldList() { return this.oldIds.map(id => this.items.find(n => n.id === id)).filter(Boolean); },
+      get oldSel() { return this.items.find(n => n.id === this.oldSelId) || null; },
+      openOld(n) {
+        this.oldSelId = n.id;
+        this.hideTip();
+        this.$nextTick(() => { this.$refs.old.scrollTop = 0; });
+      },
+      goList() {
+        if (this.view === 'sena') { this.oldSelId = null; this.snapshotOld(); this.$nextTick(() => { this.$refs.old.scrollTop = 0; }); }
+        else { this.selId = null; this.mobileOpen = false; }
+      },
+      readMin(n) {
+        const words = n.body.join(' ').split(/\s+/).length;
+        return Math.max(1, Math.round(words / 200));
+      },
+      save() { try { localStorage.setItem(STORE, JSON.stringify(this.read)); localStorage.setItem(STORE + '-saved', JSON.stringify(this.saved)); } catch (e) {} },
+
+      toggleSave(n) {
+        const on = !this.saved[n.id];
+        const next = Object.assign({}, this.saved);
+        if (on) next[n.id] = true; else delete next[n.id];
+        this.saved = next;
+        this.save();
+        if (on) { this.pop = 's' + n.id; setTimeout(() => { if (this.pop === 's' + n.id) this.pop = null; }, 500); }
+        if (this.tip.id) this.tip = Object.assign({}, this.tip, { label: on ? 'Pašalinti iš išsaugotų' : 'Išsaugoti' });
+        this.showToast(on ? 'Išsaugota skiltyje „Mano aplinka“' : 'Pašalinta iš išsaugotų', null, null);
+      },
+      share(n) {
+        const url = 'https://www.mokesciusufleris.lt/naujienos/' + n.id;
+        const done = () => this.showToast('Nuoroda nukopijuota', null, null);
+        try { navigator.clipboard.writeText(url).then(done, done); } catch (e) { done(); }
+      },
+
+      isRead(n) { return !!this.read[n.id]; },
+      get unreadCount() { return this.items.filter(n => !this.read[n.id]).length; },
+
+      get list() {
+        const q = this.sq;
+        return this.items.filter(n => {
+          const r = !!this.read[n.id];
+          if (this.tab === 'unread' && r && !this.keep[n.id]) return false;
+          if (this.tab === 'read' && !r && !this.keep[n.id]) return false;
+          if (q && !(n.title + ' ' + n.tag + ' ' + n.summary).toLowerCase().includes(q)) return false;
+          return true;
+        });
+      },
+      get groups() {
+        const out = [];
+        this.list.forEach(n => {
+          const key = n.date.slice(0, 7);
+          let g = out.find(x => x.key === key);
+          if (!g) {
+            const m = +key.slice(5, 7) - 1;
+            const label = key === TODAY.slice(0, 7) ? 'Šį mėnesį' : MONTHS[m] + ' ' + key.slice(0, 4);
+            g = { key, label, items: [] };
+            out.push(g);
+          }
+          g.items.push(n);
+        });
+        return out;
+      },
+      // Paieškos frazė taikoma sąrašui tik kai aktyvus „Mokesčių naujienos“ filtras
+      get sq() { return this.isScoped ? this.q.trim().toLowerCase() : ''; },
+      focusSearch() {
+        this.scoped = true;
+        const box = this.$refs.g.closest('.ms-gsearch');
+        box.classList.remove('is-flash');
+        box.offsetWidth;
+        box.classList.add('is-flash');
+        setTimeout(() => box.classList.remove('is-flash'), 1150);
+        this.$refs.g.focus();
+      },
+      removeScope() { this.scoped = false; this.$nextTick(() => this.$refs.g.focus()); },
+      get sel() { return this.items.find(n => n.id === this.selId) || null; },
+      get posIndex() { return this.list.findIndex(n => n.id === this.selId); },
+      get posLabel() { const i = this.posIndex; return i < 0 ? '' : (i + 1) + ' iš ' + this.list.length; },
+      get tipText() {
+        if (this.tip.label) return this.tip.label;
+        const n = this.items.find(x => x.id === this.tip.id);
+        return n && this.read[n.id] ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą';
+      },
+
+      plural(n, one, few, many) {
+        const a = n % 10, b = n % 100;
+        if (a === 1 && b !== 11) return one;
+        if (a >= 2 && (b < 11 || b > 19)) return few;
+        return many;
+      },
+
+      setTab(t) { this.tab = t; this.keep = {}; this.$refs.scroll.scrollTop = 0; },
+
+      open(n) {
+        clearTimeout(this.advanceTimer);
+        this.selId = n.id;
+        this.mobileOpen = true;
+        this.$nextTick(() => {
+          if (this.$refs.doc) this.$refs.doc.scrollTop = 0;
+          const row = this.$refs.scroll.querySelector('[data-id="' + n.id + '"]');
+          const box = this.$refs.scroll;
+          if (row) {
+            const top = row.offsetTop - box.offsetTop, bottom = top + row.offsetHeight;
+            if (top < box.scrollTop) box.scrollTo({ top: top - 8, behavior: 'smooth' });
+            else if (bottom > box.scrollTop + box.clientHeight) box.scrollTo({ top: bottom - box.clientHeight + 8, behavior: 'smooth' });
+          }
+        });
+      },
+
+      toggle(n, src, silent) {
+        const on = !this.read[n.id];
+        const next = Object.assign({}, this.read);
+        if (on) next[n.id] = TODAY; else delete next[n.id];
+        this.read = next;
+        this.keep = Object.assign({}, this.keep, { [n.id]: true });
+        // Jei naujiena nebetinka aktyviam tab'ui, leidžiam varnelės animacijai pasibaigti ir sklandžiai ją išimam
+        if (this.view === 'nauja' && ((this.tab === 'unread' && on) || (this.tab === 'read' && !on))) setTimeout(() => this.leave(n.id, on), 650);
+        this.save();
+        if (on) {
+          this.pop = src + n.id;
+          setTimeout(() => { if (this.pop === src + n.id) this.pop = null; }, 650);
+        }
+        if (this.view === 'sena') {
+          const f = Object.assign({}, this.oldFresh);
+          if (on) f[n.id] = true; else delete f[n.id];
+          this.oldFresh = f;
+          this.oldAfterToggle(n, on);
+        }
+        this.nudgeBadge();
+        if (!silent) this.showToast(on ? 'Pažymėta kaip perskaityta' : 'Atžymėta kaip neperskaityta', n.id, on);
+        return on;
+      },
+
+      leave(id, wasOn) {
+        if (!!this.read[id] !== wasOn || !this.keep[id]) return;
+        const el = this.$refs.scroll.querySelector('[data-id="' + id + '"]');
+        const drop = () => { const k = Object.assign({}, this.keep); delete k[id]; this.keep = k; };
+        if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return drop();
+        el.style.height = el.offsetHeight + 'px';
+        el.offsetHeight;
+        el.classList.add('is-leaving');
+        el.style.height = '0px';
+        setTimeout(() => { el.classList.remove('is-leaving'); el.style.height = ''; drop(); }, 360);
+      },
+
+      ack(n) {
+        const on = this.toggle(n, 'r');
+        clearTimeout(this.advanceTimer);
+        if (on && this.tab === 'unread' && this.nextUnreadAfter(n.id)) {
+          this.advanceTimer = setTimeout(() => { if (this.selId === n.id) { this.noHint = true; this.openNextUnread(); } }, 1100);
+        }
+      },
+
+      nextUnreadAfter(id) {
+        const i = this.items.findIndex(n => n.id === id);
+        const order = this.items.slice(i + 1).concat(this.items.slice(0, Math.max(i, 0)));
+        return order.find(n => !this.read[n.id]) || null;
+      },
+      openNextUnread() {
+        const n = this.selId ? this.nextUnreadAfter(this.selId) : this.items.find(x => !this.read[x.id]);
+        if (n) this.open(n);
+      },
+      step(d) {
+        const n = this.list[this.posIndex + d];
+        if (n) this.open(n);
+      },
+
+      showToast(text, id, wasOn) {
+        clearTimeout(this.toastTimer);
+        this.toast = { text, id, wasOn };
+        this.toastTimer = setTimeout(() => { this.toast = null; }, 4000);
+      },
+      undo() {
+        if (!this.toast) return;
+        const n = this.items.find(x => x.id === this.toast.id);
+        clearTimeout(this.advanceTimer);
+        if (n && this.isRead(n) === this.toast.wasOn) this.toggle(n, 'u', true);
+        this.toast = null;
+      },
+
+      // Tooltip: 400 ms delsa pirmą kartą, iškart rodomas kaimyniniams (kol "šiltas"), dingsta iškart
+      showTip(e, n, instant, label) {
+        const r = e.currentTarget.getBoundingClientRect();
+        clearTimeout(this.tipTimer);
+        const show = () => { this.tip = { id: n.id, label: label || null, x: r.left, y: r.top }; };
+        if (instant || Date.now() < this.tipWarmUntil) show();
+        else this.tipTimer = setTimeout(show, 400);
+      },
+      hideTip() {
+        clearTimeout(this.tipTimer);
+        if (this.tip.id) this.tipWarmUntil = Date.now() + 300;
+        this.tip = Object.assign({}, this.tip, { id: null });
+      },
+
+      onKey(e) {
+        if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+        const k = e.key.toLowerCase();
+        if (k === 'v') { this.setView(this.view === 'nauja' ? 'sena' : 'nauja'); return; }
+        if (this.view === 'sena') {
+          if (k === 'escape') this.goList();
+          return;
+        }
+        if (k === 'j' || k === 'arrowdown') {
+          e.preventDefault();
+          const n = this.posIndex < 0 ? this.list[0] : this.list[this.posIndex + 1];
+          if (n) this.open(n);
+        } else if (k === 'k' || k === 'arrowup') {
+          e.preventDefault();
+          const n = this.list[this.posIndex - 1];
+          if (n) this.open(n);
+        } else if (k === 'x' && this.sel) {
+          this.ack(this.sel);
+        } else if (k === 'escape') {
+          this.selId = null; this.mobileOpen = false;
+        }
+      }
+    };
+  }
+</script>
+</body>
+</html>
