@@ -885,7 +885,7 @@
       tipWarmUntil: 0,
       mobileOpen: false,
       noHint: false,
-      view: 'nauja',
+      view: 'sena',
       oldSelId: null,
       oldTab: 'unread',
       oldIds: [],
@@ -900,7 +900,7 @@
         const fromHash = location.hash.replace('#', '');
         let savedView = null;
         try { savedView = localStorage.getItem(STORE + '-view'); } catch (e) {}
-        this.view = ['sena', 'nauja'].includes(fromHash) ? fromHash : (savedView === 'sena' ? 'sena' : 'nauja');
+        this.view = ['sena', 'nauja'].includes(fromHash) ? fromHash : (savedView === 'nauja' ? 'nauja' : 'sena');
         this.oldTab = this.unreadCount ? 'unread' : 'all';
         this.snapshotOld();
       },
