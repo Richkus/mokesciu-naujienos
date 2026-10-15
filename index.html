@@ -174,7 +174,7 @@
 
 
   /* Tooltip */
-  .tip { position: fixed; z-index: 50; opacity: 0; transition: opacity .12s ease; transform: translate(-6px, calc(-100% - 10px)); background: var(--ms-tip); color: #fff; font-size: 11.5px; padding: 4px 9px; border-radius: 4px; white-space: nowrap; pointer-events: none; }
+  .tip { position: fixed; z-index: 90; opacity: 0; transition: opacity .12s ease; transform: translate(-6px, calc(-100% - 10px)); background: var(--ms-tip); color: #fff; font-size: 11.5px; padding: 4px 9px; border-radius: 4px; white-space: nowrap; pointer-events: none; }
   .tip.is-on { opacity: 1; }
   .tip::after { content: ''; position: absolute; left: 14px; top: 100%; border: 5px solid transparent; border-top-color: var(--ms-tip); }
 
@@ -222,7 +222,7 @@
   .nx-empty .nx-next { margin: 0; }
 
   /* Toast */
-  .toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; background: var(--ms-toast); color: #fff; font-size: 13px; border-radius: 10px; padding: 10px 10px 10px 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 8px 28px rgba(15,83,84,.28); white-space: nowrap; }
+  .toast { position: fixed; right: 24px; bottom: 24px; z-index: 80; background: var(--ms-toast); color: #fff; font-size: 13px; border-radius: 10px; padding: 10px 10px 10px 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 8px 28px rgba(15,83,84,.28); white-space: nowrap; }
   .toast button { border: 0; background: rgba(255,255,255,.12); color: #fff; font-weight: 600; font-size: 12.5px; padding: 5px 10px; border-radius: 6px; }
   .toast button:hover { background: rgba(255,255,255,.22); }
 
@@ -302,19 +302,19 @@
   .old-item .ck { margin-top: 2px; }
   .old-item.is-leaving { overflow: hidden; opacity: 0; padding-top: 0; padding-bottom: 0; border-bottom-color: transparent; pointer-events: none; transition: height .34s var(--ms-ease), padding .34s var(--ms-ease), opacity .22s ease, border-color .34s; }
   /* „Dabartinė“: neperskaityta = lašišinis kontūras (variantas B), perskaityta = turkio užpildas */
-  .old .ck:not(.is-on) { border: 2px solid var(--ms-coral); background: #fff6f5; box-shadow: none; }
-  .old .ck:not(.is-on):hover { border-color: #d95b58; background: #fff; box-shadow: 0 0 0 4px #fbe3e1; }
-  .old .ck:not(.is-on):not(.no-hint):hover path { stroke: var(--ms-coral); }
-  .old .ck:not(.is-on):focus-visible { box-shadow: 0 0 0 3px rgba(233,112,109,.35); }
+  :is(.old, .old-panel) .ck:not(.is-on) { border: 2px solid var(--ms-coral); background: #fff6f5; box-shadow: none; }
+  :is(.old, .old-panel) .ck:not(.is-on):hover { border-color: #d95b58; background: #fff; box-shadow: 0 0 0 4px #fbe3e1; }
+  :is(.old, .old-panel) .ck:not(.is-on):not(.no-hint):hover path { stroke: var(--ms-coral); }
+  :is(.old, .old-panel) .ck:not(.is-on):focus-visible { box-shadow: 0 0 0 3px rgba(233,112,109,.35); }
   .old-ack:hover .ck:not(.is-on) { border-color: #d95b58; background: #fff; }
   /* Anksčiau perskaitytos naujienos varnelė „nugesinta“; ryški tik ką tik pažymėtos.
      Užvedus pelę grįžta ryški, kad būtų aišku, jog galima atžymėti. */
-  .old .ck.is-on.is-muted { border-color: #cfe3e4; }
-  .old .ck.is-on.is-muted::before { background: #cfe3e4; }
-  .old .ck.is-on.is-muted path { stroke: #4c8f94; }
-  .old .ck.is-on.is-muted:hover, .old-ack:hover .ck.is-on.is-muted { border-color: var(--ms-check); }
-  .old .ck.is-on.is-muted:hover::before, .old-ack:hover .ck.is-on.is-muted::before { background: var(--ms-check); }
-  .old .ck.is-on.is-muted:hover path, .old-ack:hover .ck.is-on.is-muted path { stroke: #fff; }
+  :is(.old, .old-panel) .ck.is-on.is-muted { border-color: #cfe3e4; }
+  :is(.old, .old-panel) .ck.is-on.is-muted::before { background: #cfe3e4; }
+  :is(.old, .old-panel) .ck.is-on.is-muted path { stroke: #4c8f94; }
+  :is(.old, .old-panel) .ck.is-on.is-muted:hover, .old-ack:hover .ck.is-on.is-muted { border-color: var(--ms-check); }
+  :is(.old, .old-panel) .ck.is-on.is-muted:hover::before, .old-ack:hover .ck.is-on.is-muted::before { background: var(--ms-check); }
+  :is(.old, .old-panel) .ck.is-on.is-muted:hover path, .old-ack:hover .ck.is-on.is-muted path { stroke: #fff; }
   /* „Perskaitytos“ tab'e dar neutraliau: pilkas langelis, balta varnelė; hover tik vos patamsina */
   .old[data-tab="read"] .old-item .ck.is-on.is-muted { border-color: #8aa0a2; }
   .old[data-tab="read"] .old-item .ck.is-on.is-muted::before { background: #8aa0a2; }
@@ -322,7 +322,7 @@
   .old[data-tab="read"] .old-item .ck.is-on.is-muted:hover { border-color: #6f878a; box-shadow: none; }
   .old[data-tab="read"] .old-item .ck.is-on.is-muted:hover::before { background: #6f878a; }
   .old[data-tab="read"] .old-item .ck.is-on.is-muted:hover path { stroke: #fff; }
-  .old .ck.is-on::before, .old .ck.is-on { transition: background .3s var(--ms-ease), border-color .3s var(--ms-ease), transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease; }
+  :is(.old, .old-panel) .ck.is-on::before, :is(.old, .old-panel) .ck.is-on { transition: background .3s var(--ms-ease), border-color .3s var(--ms-ease), transform .28s cubic-bezier(.2,.8,.2,1), opacity .18s ease; }
   .old-item h3 { margin: 0; font-size: 15px; line-height: 23px; font-weight: 700; color: var(--ms-ink); cursor: pointer; }
   .old-item h3:hover { color: var(--ms-link); }
   .old-item .nx-meta { margin-top: 6px; }
@@ -380,14 +380,33 @@
   .old-admin button:hover { background: var(--ms-surface-soft); }
 
   /* ==========================================================
+     „Panel“ versija: šoninis skydelis + backdrop
+     ========================================================== */
+  .old-panel-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(20, 45, 48, .34); }
+  .old-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 61; width: min(720px, 94vw); background: #fff; box-shadow: -16px 0 48px rgba(15, 40, 42, .18); }
+  .old-panel-in { display: flex; flex-direction: column; height: 100%; }
+  .old-panel-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-bottom: 1px solid var(--ms-line); }
+  .old-panel-bar .nx-pos { margin-left: auto; }
+  .old-panel-close { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--ms-sub); transition: background .15s, color .15s; }
+  .old-panel-close:hover { background: var(--ms-surface-soft); color: var(--ms-ink); }
+  .old-panel-body { flex: 1; min-height: 0; overflow-y: auto; padding: 28px 40px 64px; }
+  .old-art--panel { max-width: 640px; }
+  .pnl-anim { transition: transform .38s cubic-bezier(.22, .61, .36, 1); }
+  .pnl-anim--out { transition-duration: .28s; }
+  .pnl-from { transform: translateX(100%); }
+  .pnl-to { transform: none; }
+  @media (max-width: 720px) { .old-panel { width: 100vw; } .old-panel-body { padding: 20px 16px 48px; } }
+
+  /* ==========================================================
      Admin perjungėjas Sena / Nauja (Linear stiliumi)
      ========================================================== */
   .vswitch { position: fixed; left: 16px; bottom: 16px; z-index: 70; display: flex; align-items: center; gap: 6px; padding: 3px; border: 1px solid rgba(15,83,84,.10); border-radius: 9px; background: rgba(255,255,255,.88); box-shadow: 0 2px 8px rgba(15,40,40,.06); font-size: 11.5px; color: #7d8a8c; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .vswitch-label { display: flex; align-items: center; gap: 6px; padding: 0 2px 0 7px; font-weight: 500; }
   .vswitch-label i { width: 5px; height: 5px; border-radius: 50%; background: #b5c0c1; }
-  .vswitch-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 2px; border-radius: 6px; background: #f1f4f4; }
-  .vswitch-seg::before { content: ''; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(15,40,40,.10); transition: transform .22s var(--ms-ease); }
-  .vswitch-seg.is-new::before { transform: translateX(100%); }
+  .vswitch-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 2px; border-radius: 6px; background: #f1f4f4; }
+  .vswitch-seg::before { content: ''; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(15,40,40,.10); transition: transform .22s var(--ms-ease); }
+  .vswitch-seg.is-panel::before { transform: translateX(100%); }
+  .vswitch-seg.is-nauja::before { transform: translateX(200%); }
   .vswitch-seg button { position: relative; z-index: 1; min-width: 48px; padding: 3px 9px; border: 0; background: none; border-radius: 4px; font-size: 11.5px; font-weight: 500; color: #8a9799; transition: color .15s; }
   .vswitch-seg button.is-on { color: #3c4a4c; }
   .vswitch-seg button:hover { color: #3c4a4c; }
@@ -600,9 +619,9 @@
     </div>
 
     <!-- ===== „Sena“ versija: dabartinė skiltis + vidinis puslapis ===== -->
-    <div class="old" x-show="view === 'sena'" x-cloak x-ref="old" :data-tab="oldTab">
+    <div class="old" x-show="isOld" x-cloak x-ref="old" :data-tab="oldTab">
       <!-- Sąrašas -->
-      <div class="old-page" x-show="!oldSel">
+      <div class="old-page" x-show="!oldSel || view === 'panel'">
         <div class="old-main">
           <h1 class="old-h1">Mokesčių naujienos
             <span class="old-info" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
@@ -704,7 +723,7 @@
       </div>
 
       <!-- Vidinis puslapis -->
-      <template x-if="oldSel">
+      <template x-if="oldSel && view === 'sena'">
         <div class="old-page">
           <article class="old-art">
             <button type="button" class="old-ack" :class="{ 'is-on': isRead(oldSel) }" :aria-pressed="isRead(oldSel)" @click="toggle(oldSel, 'p')">
@@ -754,6 +773,60 @@
     </div>
   </div>
 
+  <!-- ===== „Panel“ versija: naujiena atsidaro šoniniame skydelyje virš sąrašo ===== -->
+    <div class="old-panel-backdrop" x-show="view === 'panel' && oldSel" x-cloak
+         x-transition.opacity.duration.250ms @click="closePanel()"></div>
+    <aside class="old-panel" x-show="view === 'panel' && oldSel" x-cloak role="dialog" aria-modal="true" aria-label="Naujiena"
+           x-transition:enter="pnl-anim" x-transition:enter-start="pnl-from" x-transition:enter-end="pnl-to"
+           x-transition:leave="pnl-anim pnl-anim--out" x-transition:leave-start="pnl-to" x-transition:leave-end="pnl-from">
+      <template x-if="pSel">
+        <div class="old-panel-in">
+          <div class="old-panel-bar">
+            <button type="button" class="old-panel-close" @click="closePanel()" aria-label="Uždaryti">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l10 10M13 3L3 13"/></svg>
+            </button>
+            <span class="nx-pos" x-text="panelPos"></span>
+            <button class="nx-iconbtn" @click="panelStep(-1)" :disabled="panelIndex <= 0" aria-label="Ankstesnė naujiena">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l4-4 4 4"/></svg>
+            </button>
+            <button class="nx-iconbtn" @click="panelStep(1)" :disabled="panelIndex < 0 || panelIndex >= oldList.length - 1" aria-label="Kita naujiena">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5l4 4 4-4"/></svg>
+            </button>
+          </div>
+          <div class="old-panel-body" x-ref="panelBody">
+          <article class="old-art old-art--panel">
+            <button type="button" class="old-ack" :class="{ 'is-on': isRead(pSel) }" :aria-pressed="isRead(pSel)" @click="toggle(pSel, 'p')">
+              <span class="ck" :class="{ 'is-on': isRead(pSel), 'is-muted': isMuted(pSel), 'is-pop': pop==='p'+pSel.id }" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>
+              </span>
+              <span class="old-ack-txt" x-text="isRead(pSel) ? 'Susipažinta' : 'Pažymėti kaip skaitytą'"></span>
+            </button>
+
+            <div class="old-art-meta">
+              <span x-text="pSel.date + ' | MOKESČIŲ NAUJIENA | Skaitymo trukmė ' + readMin(pSel) + ' min.'"></span>
+              <div class="nx-tools">
+                <button type="button" class="nx-tool" @click="share(pSel)" aria-label="Pasidalinti"
+                        @mouseenter="showTip($event, pSel, false, 'Pasidalinti')" @mouseleave="hideTip()">
+                  <svg viewBox="0 0 24 24"><path d="M14 5l6 5.5-6 5.5v-3.2c-4.6-.2-7.6 1.3-10 4.7.6-5.3 3.6-9.4 10-10z"/></svg>
+                </button>
+                <button type="button" class="nx-tool" :class="{ 'is-on': saved[pSel.id], 'is-pop': pop==='s'+pSel.id }" @click="toggleSave(pSel)"
+                        :aria-pressed="!!saved[pSel.id]" :aria-label="saved[pSel.id] ? 'Pašalinti iš išsaugotų' : 'Išsaugoti'"
+                        @mouseenter="showTip($event, pSel, false, saved[pSel.id] ? 'Pašalinti iš išsaugotų' : 'Išsaugoti')" @mouseleave="hideTip()">
+                  <svg viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-4.6-5.5 4.6z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <h1 x-text="pSel.title"></h1>
+            <div class="nx-body">
+              <template x-for="(p, i) in pSel.body" :key="i"><p x-text="p"></p></template>
+            </div>
+          </article>
+          </div>
+        </div>
+      </template>
+    </aside>
+
   <div class="tip" role="tooltip" :class="{ 'is-on': tip.id }" x-cloak :style="`left:${tip.x}px; top:${tip.y}px`" x-text="tipText"></div>
 
   <div class="toast" x-show="toast" x-cloak
@@ -766,8 +839,9 @@
   <!-- Admin: versijos perjungėjas (tik prototipui) -->
   <div class="vswitch" role="group" aria-label="Versija">
     <span class="vswitch-label"><i aria-hidden="true"></i>Versija</span>
-    <div class="vswitch-seg" :class="{ 'is-new': view === 'nauja' }">
+    <div class="vswitch-seg" :class="'is-' + view">
       <button type="button" :class="{ 'is-on': view === 'sena' }" :aria-pressed="view === 'sena'" @click="setView('sena')">Dabartinė</button>
+      <button type="button" :class="{ 'is-on': view === 'panel' }" :aria-pressed="view === 'panel'" @click="setView('panel')">Panel</button>
       <button type="button" :class="{ 'is-on': view === 'nauja' }" :aria-pressed="view === 'nauja'" @click="setView('nauja')">Nauja</button>
     </div>
     <kbd title="Perjungti klavišu V">V</kbd>
@@ -891,6 +965,7 @@
       oldIds: [],
       oldLimit: 50,
       oldFresh: {},
+      oldPanelId: null,
 
       init() {
         let saved = null;
@@ -900,7 +975,7 @@
         const fromHash = location.hash.replace('#', '');
         let savedView = null;
         try { savedView = localStorage.getItem(STORE + '-view'); } catch (e) {}
-        this.view = ['sena', 'nauja'].includes(fromHash) ? fromHash : (savedView === 'nauja' ? 'nauja' : 'sena');
+        this.view = ['sena', 'panel', 'nauja'].includes(fromHash) ? fromHash : (['nauja', 'panel'].includes(savedView) ? savedView : 'sena');
         this.oldTab = this.unreadCount ? 'unread' : 'all';
         this.snapshotOld();
       },
@@ -910,11 +985,24 @@
         if (this.view === v) return;
         this.view = v;
         this.hideTip();
-        if (v === 'sena') { this.oldTab = this.unreadCount ? 'unread' : 'all'; this.snapshotOld(); }
+        this.oldSelId = null;
+        if (v === 'sena' || v === 'panel') { this.oldTab = this.unreadCount ? 'unread' : 'all'; this.snapshotOld(); }
         try { localStorage.setItem(STORE + '-view', v); } catch (e) {}
         try { history.replaceState(null, '', '#' + v); } catch (e) {}
       },
       get isScoped() { return this.scoped && this.view === 'nauja'; },
+      get isOld() { return this.view === 'sena' || this.view === 'panel'; },
+
+      // ---------- „Panel“ versija ----------
+      // Turinys laikomas pagal oldPanelId, kad uždarant skydelis išslystų su turiniu (ne tuščias)
+      get pSel() { return this.items.find(n => n.id === this.oldPanelId) || null; },
+      get panelIndex() { return this.oldList.findIndex(n => n.id === this.oldPanelId); },
+      get panelPos() { const i = this.panelIndex; return i < 0 ? '' : (i + 1) + ' iš ' + this.oldList.length; },
+      panelStep(d) {
+        const n = this.oldList[this.panelIndex + d];
+        if (n) this.openOld(n);
+      },
+      closePanel() { this.oldSelId = null; this.hideTip(); },
 
       // ---------- „Sena“ versija ----------
       // Imituoja puslapio užkrovimą: sąrašas sudaromas tik perjungiant tab'ą / versiją
@@ -965,11 +1053,15 @@
       get oldSel() { return this.items.find(n => n.id === this.oldSelId) || null; },
       openOld(n) {
         this.oldSelId = n.id;
+        this.oldPanelId = n.id;
         this.hideTip();
-        this.$nextTick(() => { this.$refs.old.scrollTop = 0; });
+        this.$nextTick(() => {
+          if (this.view === 'panel') { if (this.$refs.panelBody) this.$refs.panelBody.scrollTop = 0; }
+          else this.$refs.old.scrollTop = 0;
+        });
       },
       goList() {
-        if (this.view === 'sena') { this.oldSelId = null; this.snapshotOld(); this.$nextTick(() => { this.$refs.old.scrollTop = 0; }); }
+        if (this.isOld) { this.oldSelId = null; this.snapshotOld(); this.$nextTick(() => { this.$refs.old.scrollTop = 0; }); }
         else { this.selId = null; this.mobileOpen = false; }
       },
       readMin(n) {
@@ -1081,7 +1173,7 @@
           this.pop = src + n.id;
           setTimeout(() => { if (this.pop === src + n.id) this.pop = null; }, 650);
         }
-        if (this.view === 'sena') {
+        if (this.isOld) {
           const f = Object.assign({}, this.oldFresh);
           if (on) f[n.id] = true; else delete f[n.id];
           this.oldFresh = f;
@@ -1156,9 +1248,9 @@
       onKey(e) {
         if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
         const k = e.key.toLowerCase();
-        if (k === 'v') { this.setView(this.view === 'nauja' ? 'sena' : 'nauja'); return; }
-        if (this.view === 'sena') {
-          if (k === 'escape') this.goList();
+        if (k === 'v') { const order = ['sena', 'panel', 'nauja']; this.setView(order[(order.indexOf(this.view) + 1) % 3]); return; }
+        if (this.isOld) {
+          if (k === 'escape') { if (this.view === 'panel') this.closePanel(); else this.goList(); }
           return;
         }
         if (k === 'j' || k === 'arrowdown') {
