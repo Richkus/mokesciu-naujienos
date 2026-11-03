@@ -380,6 +380,30 @@
   .old-admin button:hover { background: var(--ms-surface-soft); }
 
   /* ==========================================================
+     „MVP“ versija: dabartinis sąrašas + skiltis „Archyvas“
+     ========================================================== */
+  .mvp-h1 { padding-bottom: 12px; border-bottom: 1px solid var(--ms-line); font-weight: 400; }
+  .mvp-intro { margin: 18px 0 14px; font-size: 14.5px; line-height: 21px; color: var(--ms-ink); }
+  .mvp-status { margin: 0; padding-bottom: 16px; border-bottom: 1px solid var(--ms-line); font-size: 12.5px; color: var(--ms-ink); }
+  .mvp-status b { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 2px; border-radius: 3px; background: var(--ms-coral); color: #fff; font-weight: 600; text-align: center; line-height: 16px; }
+  /* checkbox kaip dabartiniame Suflerio puslapyje */
+  .mvp-ck { position: relative; width: 26px; height: 26px; margin-top: 2px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; background: #f4a6a3; cursor: pointer; transition: background .25s, box-shadow .25s; }
+  .mvp-ck svg { width: 15px; height: 15px; }
+  .mvp-ck path { fill: none; stroke: rgba(255, 255, 255, .85); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .mvp-ck.is-on { background: #d3e3e4; box-shadow: inset 0 0 0 1.5px #8fb3b6; }
+  .mvp-ck.is-on path { stroke: #2f5f63; }
+  .mvp-ck:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.4); }
+  /* archyvo checkbox: tuščias, neutralus pilkas (ne „pažymėta“), užvedus pelę blanki varnelė */
+  .mvp-ck.is-archived { background: #fff; box-shadow: inset 0 0 0 1.5px #c3cfd0; }
+  .mvp-ck.is-archived path { stroke: transparent; }
+  .mvp-ck.is-archived:hover { box-shadow: inset 0 0 0 1.5px #8fa3a5; }
+  .mvp-ck.is-archived:hover path { stroke: #b4c3c4; }
+  .mvp-item.is-archived h3 { color: var(--ms-ink-soft); }
+  .mvp-arch-head { display: flex; align-items: center; gap: 4px; margin-top: 28px; padding: 10px 0 8px; border-bottom: 1px solid var(--ms-line); font-size: 12px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--ms-sub); }
+  .mvp-arch-head .old-info-btn { width: 22px; height: 22px; transform: none; }
+  .mvp-arch-pop { text-transform: none; letter-spacing: 0; }
+
+  /* ==========================================================
      „Panel“ versija: šoninis skydelis + backdrop
      ========================================================== */
   .old-panel-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(20, 45, 48, .34); }
@@ -404,10 +428,11 @@
   .vswitch { position: fixed; left: 16px; bottom: 16px; z-index: 70; display: flex; align-items: center; gap: 6px; padding: 3px; border: 1px solid rgba(15,83,84,.10); border-radius: 9px; background: rgba(255,255,255,.88); box-shadow: 0 2px 8px rgba(15,40,40,.06); font-size: 11.5px; color: #7d8a8c; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .vswitch-label { display: flex; align-items: center; gap: 6px; padding: 0 2px 0 7px; font-weight: 500; }
   .vswitch-label i { width: 5px; height: 5px; border-radius: 50%; background: #b5c0c1; }
-  .vswitch-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 2px; border-radius: 6px; background: #f1f4f4; }
-  .vswitch-seg::before { content: ''; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 3); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(15,40,40,.10); transition: transform .22s var(--ms-ease); }
-  .vswitch-seg.is-panel::before { transform: translateX(100%); }
-  .vswitch-seg.is-nauja::before { transform: translateX(200%); }
+  .vswitch-seg { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; padding: 2px; border-radius: 6px; background: #f1f4f4; }
+  .vswitch-seg::before { content: ''; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / 4); border-radius: 4px; background: #fff; box-shadow: 0 1px 2px rgba(15,40,40,.10); transition: transform .22s var(--ms-ease); }
+  .vswitch-seg.is-sena::before { transform: translateX(100%); }
+  .vswitch-seg.is-panel::before { transform: translateX(200%); }
+  .vswitch-seg.is-nauja::before { transform: translateX(300%); }
   .vswitch-seg button { position: relative; z-index: 1; min-width: 48px; padding: 3px 9px; border: 0; background: none; border-radius: 4px; font-size: 11.5px; font-weight: 500; color: #8a9799; transition: color .15s; }
   .vswitch-seg button.is-on { color: #3c4a4c; }
   .vswitch-seg button:hover { color: #3c4a4c; }
@@ -622,7 +647,7 @@
     <!-- ===== „Sena“ versija: dabartinė skiltis + vidinis puslapis ===== -->
     <div class="old" x-show="isOld" x-cloak x-ref="old" :data-tab="oldTab">
       <!-- Sąrašas -->
-      <div class="old-page" x-show="!oldSel || view === 'panel'">
+      <div class="old-page" x-show="view !== 'mvp' && (!oldSel || view === 'panel')">
         <div class="old-main">
           <h1 class="old-h1">Mokesčių naujienos
             <span class="old-info" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
@@ -723,8 +748,88 @@
         </aside>
       </div>
 
+      <!-- ===== „MVP“: dabartinis Suflerio sąrašas + skiltis „Archyvas“ (naujienos senesnės nei 60 d.) ===== -->
+      <div class="old-page" x-show="view === 'mvp' && !oldSel">
+        <div class="old-main">
+          <h1 class="old-h1 mvp-h1">Mokesčių naujienos</h1>
+          <p class="mvp-intro">Susipažinkite su mokesčių naujienomis patogiu ir laiką taupančiu formatu! Šioje svetainės skiltyje pateikiamos aktualios mokesčių naujienos ir susiję teisės aktai. Naudokitės funkcija "Susipažinau" ir tikrai nieko svarbaus nepraleisite.</p>
+          <p class="mvp-status" x-show="unreadCount">Jūs turite <b x-text="unreadCount"></b> <span x-text="plural(unreadCount, 'neperskaitytą mokesčių naujieną', 'neperskaitytas mokesčių naujienas', 'neperskaitytų mokesčių naujienų')"></span>. Peržiūrėkite sąrašą:</p>
+          <p class="mvp-status" x-show="!unreadCount" x-cloak>Jūs neperskaitytų mokesčių naujienų neturite. Šaunu!</p>
+
+          <template x-for="n in items" :key="'mvp' + n.id">
+              <div class="old-item mvp-item" :class="{ 'is-read': isRead(n) }">
+                <button type="button" class="mvp-ck" :class="{ 'is-on': isRead(n), 'is-archived': false }"
+                        :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
+                        @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
+                <div style="min-width:0">
+                  <h3 x-text="n.title" @click="openOld(n)"></h3>
+                  <div class="nx-meta"><span x-text="n.date"></span><span class="nx-tag" x-text="n.tag"></span></div>
+                  <p class="old-sum" x-text="n.body.join(' ')"></p>
+                  <button type="button" class="old-more" @click="openOld(n)">Skaityti plačiau
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
+                  </button>
+                </div>
+              </div>
+          </template>
+
+          <!-- Archyvas: tik antraštė su paaiškinimu; checkbox'ai tušti ir pilki, varnelę uždeda tik žmogus -->
+          <div class="mvp-arch-head">
+            <span>Archyvas</span>
+            <span class="old-info" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false" @mouseenter="open = true" @mouseleave="open = false">
+              <button type="button" class="old-info-btn" :class="{ 'is-on': open }" @click="open = !open" aria-label="Kas yra archyvas?" :aria-expanded="open.toString()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="6.25"/><path d="M7 6.2v3.6"/><circle cx="7" cy="4.2" r=".4" fill="currentColor"/></svg>
+              </button>
+              <span class="old-info-pop mvp-arch-pop" x-show="open" x-cloak x-transition.opacity.scale.96.origin.top.left.duration.150ms role="tooltip">
+                <strong>Kas yra archyvas?</strong>
+                Naujienos, paskelbtos daugiau nei prieš 60 dienų. Jos neįtraukiamos į neperskaitytų skaičių, kad šis nedidėtų, kai kurį laiką nesilankote. Jei perskaitėte, pasižymėkite kaip įprastai.
+              </span>
+            </span>
+          </div>
+
+          <template x-for="n in archive" :key="'mvpa' + n.id">
+              <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n) }">
+                <button type="button" class="mvp-ck" :class="{ 'is-on': isRead(n), 'is-archived': !isRead(n) }"
+                        :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
+                        @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
+                <div style="min-width:0">
+                  <h3 x-text="n.title" @click="openOld(n)"></h3>
+                  <div class="nx-meta"><span x-text="n.date"></span><span class="nx-tag" x-text="n.tag"></span></div>
+                  <p class="old-sum" x-text="n.body.join(' ')"></p>
+                  <button type="button" class="old-more" @click="openOld(n)">Skaityti plačiau
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
+                  </button>
+                </div>
+              </div>
+          </template>
+
+          <nav class="old-pager" aria-label="Puslapiai">
+            <button type="button" class="is-on" aria-current="page">1</button>
+            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">2</button>
+            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">3</button>
+            <span aria-hidden="true">…</span>
+            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">92</button>
+            <button type="button" class="old-pager-next" aria-label="Kitas puslapis" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
+            </button>
+          </nav>
+        </div>
+
+        <aside class="old-side">
+          <a href="#" class="old-card" @click.prevent="showToast('Testas prototipe neatsidaro', null, null)">
+            <div class="old-card-img" aria-hidden="true">
+              <div class="old-card-paper"><span>2026</span><strong>09-01</strong><i></i><i style="width:70%"></i></div>
+            </div>
+            <div class="old-card-body">
+              <small>TESTAS • 2026-09-01</small>
+              <strong>Mokesčių naujienų testas</strong>
+              <span>6 klausimai</span>
+            </div>
+          </a>
+        </aside>
+      </div>
+
       <!-- Vidinis puslapis -->
-      <template x-if="oldSel && view === 'sena'">
+      <template x-if="oldSel && (view === 'sena' || view === 'mvp')">
         <div class="old-page">
           <article class="old-art">
             <button type="button" class="old-ack" :class="{ 'is-on': isRead(oldSel) }" :aria-pressed="isRead(oldSel)" @click="toggle(oldSel, 'p')">
@@ -845,6 +950,7 @@
   <div class="vswitch" role="group" aria-label="Versija">
     <span class="vswitch-label"><i aria-hidden="true"></i>Versija</span>
     <div class="vswitch-seg" :class="'is-' + view">
+      <button type="button" :class="{ 'is-on': view === 'mvp' }" :aria-pressed="view === 'mvp'" @click="setView('mvp')">MVP</button>
       <button type="button" :class="{ 'is-on': view === 'sena' }" :aria-pressed="view === 'sena'" @click="setView('sena')">Dabartinė</button>
       <button type="button" :class="{ 'is-on': view === 'panel' }" :aria-pressed="view === 'panel'" @click="setView('panel')">Panel</button>
       <button type="button" :class="{ 'is-on': view === 'nauja' }" :aria-pressed="view === 'nauja'" @click="setView('nauja')">Nauja</button>
@@ -941,6 +1047,24 @@
   ];
 
   const MONTHS = ['Sausis','Vasaris','Kovas','Balandis','Gegužė','Birželis','Liepa','Rugpjūtis','Rugsėjis','Spalis','Lapkritis','Gruodis'];
+  // „MVP“: naujienos senesnės nei 60 d. (iki 2026-08-08). Į neperskaitytų skaičių neįtraukiamos.
+  const ARCHIVE = [
+    { id: 101, date: '2026-08-04', tag: 'Paskolos', source: 'VMI',
+      title: 'Pakeistas PMĮ 40 str. komentaras dėl plonosios kapitalizacijos taisyklės taikymo',
+      summary: 'PMĮ komentaras papildytas nuostatomis dėl paskolų, gautų iš trečiųjų asmenų.',
+      body: ['PMĮ komentaras dėl plonosios kapitalizacijos taisyklės taikymo papildytas nuostatomis dėl paskolų, gautų iš trečiųjų asmenų, kai tokias paskolas garantuoja ar laiduoja kontroliuojantis skolintojas.', 'Jeigu taikoma kitokia paskolos grąžinimo užtikrinimo priemonė, komentare pateikiami pavyzdžiai, kaip vertinti kontrolės ryšį.'],
+      acts: ['PMĮ 40 straipsnis'] },
+    { id: 102, date: '2026-07-28', tag: 'Santykiai su akcininkais', source: 'Seimas',
+      title: 'Nuo 2026-11-01 į ABĮ įtraukta nauja akcijų rūšis – daugiabalsės akcijos',
+      summary: 'Įmonės, kurių akcijomis nėra prekiaujama viešai, galės išleisti daugiabalses akcijas.',
+      body: ['Įmonės, kurių akcijomis nėra prekiaujama viešai, nuo 2026-11-01 turės galimybę išleisti daugiabalses akcijas. Taip suteikiamos galimybės įmonėms, kurios ketina akcijomis prekiauti viešai ar kitais būdais pritraukti investicijas, išsaugoti valdymo kontrolę.'],
+      acts: ['Akcinių bendrovių įstatymas'] },
+    { id: 103, date: '2026-07-15', tag: 'Individuali veikla', source: 'Sodra',
+      title: 'Ūkininkų, kurie įmokas mokės nuo neapmokestinamųjų pajamų, VSD įmokų įskaitymo taisyklės',
+      summary: 'Pakeistos SAV pildymo ir pateikimo taisyklių nuostatos dėl ūkininkų.',
+      body: ['Pakeistos SAV pildymo ir pateikimo taisyklių nuostatos dėl ūkininkų, kurie VSD įmokas mokės nuo neapmokestinamųjų pajamų, sumokėtų įmokų įskaitymo į apdraustųjų registrą, kai „Sodrai“ ir VMI pateikti duomenys nesutaps.'],
+      acts: ['SAV pildymo taisyklės'] }
+  ];
   const TODAY = '2026-10-07';
   const STORE = 'ms-naujienos-read-v1';
 
@@ -981,7 +1105,7 @@
         const deep = fromHash.match(/^naujiena-(\d+)$/);
         let savedView = null;
         try { savedView = localStorage.getItem(STORE + '-view'); } catch (e) {}
-        this.view = ['sena', 'panel', 'nauja'].includes(fromHash) ? fromHash : (['nauja', 'panel'].includes(savedView) ? savedView : 'sena');
+        this.view = ['mvp', 'sena', 'panel', 'nauja'].includes(fromHash) ? fromHash : (['nauja', 'panel', 'mvp'].includes(savedView) ? savedView : 'sena');
         this.oldTab = this.unreadCount ? 'unread' : 'all';
         this.snapshotOld();
         if (deep && this.items.some(n => n.id === +deep[1])) {
@@ -1001,7 +1125,8 @@
         try { history.replaceState(null, '', '#' + v); } catch (e) {}
       },
       get isScoped() { return this.scoped && this.view === 'nauja'; },
-      get isOld() { return this.view === 'sena' || this.view === 'panel'; },
+      get isOld() { return this.view === 'sena' || this.view === 'panel' || this.view === 'mvp'; },
+      archive: ARCHIVE,
 
       // ---------- „Panel“ versija ----------
       // Turinys laikomas pagal oldPanelId, kad uždarant skydelis išslystų su turiniu (ne tuščias)
@@ -1062,7 +1187,7 @@
       },
       get oldVisible() { return this.oldTab === 'unread' ? this.oldList.slice(0, this.oldLimit) : this.oldList; },
       get oldList() { return this.oldIds.map(id => this.items.find(n => n.id === id)).filter(Boolean); },
-      get oldSel() { return this.items.find(n => n.id === this.oldSelId) || null; },
+      get oldSel() { return this.items.find(n => n.id === this.oldSelId) || this.archive.find(n => n.id === this.oldSelId) || null; },
       openOld(n) {
         this.oldSelId = n.id;
         this.oldPanelId = n.id;
@@ -1143,7 +1268,7 @@
       get posLabel() { const i = this.posIndex; return i < 0 ? '' : (i + 1) + ' iš ' + this.list.length; },
       get tipText() {
         if (this.tip.label) return this.tip.label;
-        const n = this.items.find(x => x.id === this.tip.id);
+        const n = this.items.find(x => x.id === this.tip.id) || this.archive.find(x => x.id === this.tip.id);
         return n && this.read[n.id] ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą';
       },
 
