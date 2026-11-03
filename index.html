@@ -387,6 +387,10 @@
   .mvp-status b { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 2px; border-radius: 3px; background: var(--ms-coral); color: #fff; font-weight: 600; text-align: center; line-height: 16px; }
   /* Archyvas šiek tiek nublankęs: pilki pavadinimai ir neperžymėti checkbox'ai */
   .mvp-item.is-archived h3 { color: #7d8b8d; }
+  /* MVP: pažymėtos varnelės hover subtilus, ne ryškiai žalias */
+  .old .mvp-item .ck.is-on.is-muted:hover { border-color: #b3d1d3; box-shadow: 0 0 0 4px #eef5f5; }
+  .old .mvp-item .ck.is-on.is-muted:hover::before { background: #b3d1d3; }
+  .old .mvp-item .ck.is-on.is-muted:hover path { stroke: #3d7f84; }
   .mvp-item.is-new { animation: mvp-in .45s var(--ms-ease) both; }
   @keyframes mvp-in { from { opacity: 0; transform: translateY(8px); } }
   .mvp-item.is-archived h3:hover { color: var(--ms-ink-soft); }
@@ -753,7 +757,7 @@
           <p class="mvp-status" x-show="!unreadCount" x-cloak>Jūs neperskaitytų mokesčių naujienų neturite. Šaunu!</p>
 
           <template x-for="n in mvpSorted(items)" :key="'mvp' + n.id">
-              <div class="old-item mvp-item" :class="{ 'is-read': isRead(n) }">
+              <div class="old-item mvp-item">
                 <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isRead(n) && pop !== 'm'+n.id, 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
