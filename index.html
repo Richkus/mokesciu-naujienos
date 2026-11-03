@@ -754,7 +754,7 @@
 
           <template x-for="n in mvpSorted(items)" :key="'mvp' + n.id">
               <div class="old-item mvp-item" :class="{ 'is-read': isRead(n) }">
-                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='m'+n.id }"
+                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isRead(n) && pop !== 'm'+n.id, 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
                 <div style="min-width:0">
@@ -784,7 +784,7 @@
 
           <template x-for="(n, i) in mvpSorted(archive).slice(0, mvpArchLimit)" :key="'mvpa' + n.id">
               <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n), 'is-new': i >= 3 }">
-                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='m'+n.id }"
+                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isRead(n) && pop !== 'm'+n.id, 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
                 <div style="min-width:0">
