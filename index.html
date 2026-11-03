@@ -392,10 +392,6 @@
   .old-load-more.is-loading { cursor: default; color: var(--ms-muted); }
   .old-load-more.is-loading .old-load-spin { display: inline-block; }
   @keyframes old-spin { to { transform: rotate(360deg); } }
-  /* MVP archyvas: neperžymėtas checkbox'as tuščias ir pilkas (ne koralinis), varnelę uždeda tik žmogus */
-  .old .ck.is-archived:not(.is-on) { border-color: #c3cfd0; background: #fff; }
-  .old .ck.is-archived:not(.is-on):hover { border-color: #8fa3a5; background: #fff; box-shadow: 0 0 0 4px #eef2f2; }
-  .old .ck.is-archived:not(.is-on):not(.no-hint):hover path { stroke: #8fa3a5; }
   .mvp-arch-head { display: flex; align-items: center; gap: 4px; margin-top: 28px; padding: 10px 0 8px; border-bottom: 1px solid var(--ms-line); font-size: 12px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--ms-sub); }
   .mvp-arch-head .old-info-btn { width: 22px; height: 22px; transform: none; }
   .mvp-arch-pop { text-transform: none; letter-spacing: 0; }
@@ -782,7 +778,7 @@
 
           <template x-for="n in archive" :key="'mvpa' + n.id">
               <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n) }">
-                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-archived': !isRead(n), 'is-pop': pop==='m'+n.id }"
+                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
                 <div style="min-width:0">
