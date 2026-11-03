@@ -1422,7 +1422,8 @@
           this.oldFresh = f;
           this.oldAfterToggle(n, on);
         }
-        this.nudgeBadge();
+        // Archyvo naujienos neskaičiuojamos, todėl ženkliukas šone nejuda
+        if (!this.archive.some(a => a.id === n.id)) this.nudgeBadge();
         if (!silent) this.showToast(on ? 'Pažymėta kaip perskaityta' : 'Atžymėta kaip neperskaityta', n.id, on);
         return on;
       },
