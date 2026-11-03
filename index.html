@@ -798,7 +798,7 @@
 
           <div id="mvp-archive" x-show="mvpArchOpen" x-collapse x-cloak>
           <template x-for="(n, i) in archive.slice(0, mvpArchLimit)" :key="'mvpa' + n.id">
-              <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n), 'is-new': i >= 3 }">
+              <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n), 'is-new': i >= 10 }">
                 <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isRead(n) && pop !== 'm'+n.id, 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
@@ -1247,7 +1247,7 @@
       get isScoped() { return this.scoped && this.view === 'nauja'; },
       get isOld() { return this.view === 'sena' || this.view === 'panel' || this.view === 'mvp'; },
       archive: ARCHIVE.concat(ARCHIVE_MORE),
-      mvpArchLimit: ARCHIVE.length,
+      mvpArchLimit: 10,
       mvpArchOpen: false,
       mvpSnap: {},
 
