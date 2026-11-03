@@ -383,8 +383,7 @@
      „MVP“ versija: dabartinis sąrašas + skiltis „Archyvas“
      ========================================================== */
   .mvp-h1 { padding-bottom: 12px; border-bottom: 1px solid var(--ms-line); font-weight: 400; }
-  .mvp-intro { margin: 18px 0 14px; font-size: 14.5px; line-height: 21px; color: var(--ms-ink); }
-  .mvp-status { margin: 0; padding-bottom: 16px; border-bottom: 1px solid var(--ms-line); font-size: 12.5px; color: var(--ms-ink); }
+  .mvp-status { margin: 16px 0 0; padding-bottom: 16px; border-bottom: 1px solid var(--ms-line); font-size: 12.5px; color: var(--ms-ink); }
   .mvp-status b { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 2px; border-radius: 3px; background: var(--ms-coral); color: #fff; font-weight: 600; text-align: center; line-height: 16px; }
   .mvp-item.is-archived h3 { color: var(--ms-ink-soft); }
   .old-load-more { display: inline-flex; align-items: center; gap: 8px; }
@@ -742,7 +741,6 @@
       <div class="old-page" x-show="view === 'mvp' && !oldSel">
         <div class="old-main">
           <h1 class="old-h1 mvp-h1">Mokesčių naujienos</h1>
-          <p class="mvp-intro">Susipažinkite su mokesčių naujienomis patogiu ir laiką taupančiu formatu! Šioje svetainės skiltyje pateikiamos aktualios mokesčių naujienos ir susiję teisės aktai. Naudokitės funkcija "Susipažinau" ir tikrai nieko svarbaus nepraleisite.</p>
           <p class="mvp-status" x-show="unreadCount">Jūs turite <b x-text="unreadCount"></b> <span x-text="plural(unreadCount, 'neperskaitytą mokesčių naujieną', 'neperskaitytas mokesčių naujienas', 'neperskaitytų mokesčių naujienų')"></span>. Peržiūrėkite sąrašą:</p>
           <p class="mvp-status" x-show="!unreadCount" x-cloak>Jūs neperskaitytų mokesčių naujienų neturite. Šaunu!</p>
 
