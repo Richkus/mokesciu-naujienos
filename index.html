@@ -797,7 +797,7 @@
           </div>
 
           <div id="mvp-archive" x-show="mvpArchOpen" x-collapse x-cloak>
-          <template x-for="(n, i) in mvpSorted(archive).slice(0, mvpArchLimit)" :key="'mvpa' + n.id">
+          <template x-for="(n, i) in archive.slice(0, mvpArchLimit)" :key="'mvpa' + n.id">
               <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n), 'is-new': i >= 3 }">
                 <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isRead(n) && pop !== 'm'+n.id, 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
@@ -1229,7 +1229,7 @@
       },
 
       // ---------- Versijos perjungėjas ----------
-      // MVP: pažymėtos naujienos keliauja į sąrašo apačią tik perkrovus puslapį (pagal momentinę kopiją), kad paspaudus niekas nešokinėtų
+      // MVP (tik viršutinis sąrašas; archyvas lieka pagal datą): pažymėtos naujienos keliauja į apačią tik perkrovus puslapį (pagal momentinę kopiją), kad paspaudus niekas nešokinėtų
       mvpSorted(list) {
         const snap = this.mvpSnap;
         return list.filter(n => !snap[n.id]).concat(list.filter(n => snap[n.id]));
