@@ -387,6 +387,8 @@
   .mvp-status b { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 2px; border-radius: 3px; background: var(--ms-coral); color: #fff; font-weight: 600; text-align: center; line-height: 16px; }
   /* Archyvas šiek tiek nublankęs: pilki pavadinimai ir neperžymėti checkbox'ai */
   .mvp-item.is-archived h3 { color: #7d8b8d; }
+  .mvp-item.is-new { animation: mvp-in .45s var(--ms-ease) both; }
+  @keyframes mvp-in { from { opacity: 0; transform: translateY(8px); } }
   .mvp-item.is-archived h3:hover { color: var(--ms-ink-soft); }
   .old .mvp-item.is-archived .ck:not(.is-on) { border-color: #b9c6c7; background: #f4f7f7; }
   .old .mvp-item.is-archived .ck:not(.is-on):hover { border-color: #8fa3a5; background: #fff; box-shadow: 0 0 0 4px #eef2f2; }
@@ -750,7 +752,7 @@
           <p class="mvp-status" x-show="unreadCount">Jūs turite <b x-text="unreadCount"></b> <span x-text="plural(unreadCount, 'neperskaitytą mokesčių naujieną', 'neperskaitytas mokesčių naujienas', 'neperskaitytų mokesčių naujienų')"></span>. Peržiūrėkite sąrašą:</p>
           <p class="mvp-status" x-show="!unreadCount" x-cloak>Jūs neperskaitytų mokesčių naujienų neturite. Šaunu!</p>
 
-          <template x-for="n in items" :key="'mvp' + n.id">
+          <template x-for="n in mvpSorted(items)" :key="'mvp' + n.id">
               <div class="old-item mvp-item" :class="{ 'is-read': isRead(n) }">
                 <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
@@ -780,8 +782,8 @@
             </span>
           </div>
 
-          <template x-for="n in archive" :key="'mvpa' + n.id">
-              <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n) }">
+          <template x-for="(n, i) in mvpSorted(archive).slice(0, mvpArchLimit)" :key="'mvpa' + n.id">
+              <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n), 'is-new': i >= 3 }">
                 <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
@@ -798,9 +800,10 @@
 
           <!-- Vietoje puslapių numerių: „Rodyti daugiau“ be skaičiaus -->
           <div class="old-queue-end">
-            <button type="button" class="old-load-more" :class="{ 'is-loading': mvpLoading }" :disabled="mvpLoading" @click="mvpLoading = true; setTimeout(() => { mvpLoading = false; showToast('Prototipe daugiau naujienų nėra', null, null) }, 700)">
+            <button type="button" class="old-load-more" x-show="mvpArchLimit < archive.length" :class="{ 'is-loading': mvpLoading }" :disabled="mvpLoading" @click="mvpLoading = true; setTimeout(() => { mvpLoading = false; mvpArchLimit += 10 }, 600)">
               <span class="old-load-spin" aria-hidden="true"></span><span>Rodyti daugiau</span>
             </button>
+            <span x-show="mvpArchLimit >= archive.length" x-cloak>Daugiau naujienų nėra.</span>
           </div>
         </div>
 
@@ -1055,6 +1058,109 @@
       body: ['Pakeistos SAV pildymo ir pateikimo taisyklių nuostatos dėl ūkininkų, kurie VSD įmokas mokės nuo neapmokestinamųjų pajamų, sumokėtų įmokų įskaitymo į apdraustųjų registrą, kai „Sodrai“ ir VMI pateikti duomenys nesutaps.'],
       acts: ['SAV pildymo taisyklės'] }
   ];
+  // Papildomos archyvo naujienos, kurias užkrauna „Rodyti daugiau“ (po 10, du kartus)
+  const ARCHIVE_MORE = [
+    { id: 104, date: '2026-07-10', tag: 'PVM', source: 'VMI',
+      title: 'Patikslintas PVM komentaras dėl elektroninių paslaugų teikimo vietos',
+      summary: 'Komentare papildomai paaiškinta, kaip nustatyti elektroninių paslaugų teikimo vietą, kai pirkėjas yra ne PVM mokėtojas.',
+      body: ['Komentare papildomai paaiškinta, kaip nustatyti elektroninių paslaugų teikimo vietą, kai pirkėjas yra ne PVM mokėtojas.', 'Pateikta pavyzdžių dėl prenumeratų ir programinės įrangos licencijų.'],
+      acts: [] },
+    { id: 105, date: '2026-07-08', tag: 'GPM', source: 'VMI',
+      title: 'GPM deklaracijų tikslinimo terminai: ką svarbu žinoti',
+      summary: 'VMI primena, kad metinę GPM deklaraciją galima tikslinti per 5 metus.',
+      body: ['VMI primena, kad metinę GPM deklaraciją galima tikslinti per 5 metus.', 'Patikslinus deklaraciją, permoka grąžinama per 30 dienų nuo prašymo pateikimo.'],
+      acts: [] },
+    { id: 106, date: '2026-07-03', tag: 'Darbo santykiai', source: 'Seimas',
+      title: 'Pakeista Darbo kodekso nuostata dėl nuotolinio darbo išlaidų kompensavimo',
+      summary: 'Darbdaviai galės kompensuoti nuotolinio darbo išlaidas fiksuota suma be atskirų dokumentų.',
+      body: ['Darbdaviai galės kompensuoti nuotolinio darbo išlaidas fiksuota suma be atskirų dokumentų.', 'Kompensacija neapmokestinama, jei neviršija nustatytos ribos.'],
+      acts: [] },
+    { id: 107, date: '2026-06-30', tag: 'Pelno mokestis', source: 'VMI',
+      title: 'Paskelbtas atnaujintas ilgalaikio turto nusidėvėjimo normatyvų sąrašas',
+      summary: 'Atnaujintame sąraše patikslintos kai kurių įrenginių ir transporto priemonių grupės.',
+      body: ['Atnaujintame sąraše patikslintos kai kurių įrenginių ir transporto priemonių grupės.', 'Pakeitimai taikomi turtui, įsigytam nuo 2026 m. liepos 1 d.'],
+      acts: [] },
+    { id: 108, date: '2026-06-26', tag: 'Socialinis draudimas', source: 'Sodra',
+      title: 'Sodra patikslino savarankiškai dirbančiųjų įmokų skaičiavimo tvarką',
+      summary: 'Savarankiškai dirbantiems įmokos bus skaičiuojamos nuo patikslintos pajamų bazės.',
+      body: ['Savarankiškai dirbantiems įmokos bus skaičiuojamos nuo patikslintos pajamų bazės.', 'Pakeitimas aktualus individualią veiklą vykdantiems asmenims.'],
+      acts: [] },
+    { id: 109, date: '2026-06-22', tag: 'Akcizai', source: 'Seimas',
+      title: 'Nuo 2027 m. didinami akcizai alkoholiniams gėrimams',
+      summary: 'Seimas pritarė akcizų tarifų didinimui alkoholiniams gėrimams.',
+      body: ['Seimas pritarė akcizų tarifų didinimui alkoholiniams gėrimams.', 'Nauji tarifai įsigalios nuo 2027 m. kovo 1 d.'],
+      acts: [] },
+    { id: 110, date: '2026-06-18', tag: 'Buhalterinė apskaita', source: 'Finansų ministerija',
+      title: 'Atnaujintas VAS standartas dėl atsargų apskaitos',
+      summary: 'Patikslinta, kaip vertinti atsargas, kai jų grynoji realizavimo vertė mažesnė už savikainą.',
+      body: ['Patikslinta, kaip vertinti atsargas, kai jų grynoji realizavimo vertė mažesnė už savikainą.', 'Pateikti nauji pavyzdžiai prekybos įmonėms.'],
+      acts: [] },
+    { id: 111, date: '2026-06-15', tag: 'PVM', source: 'VMI',
+      title: 'i.SAF teikimo pakeitimai mažoms įmonėms',
+      summary: 'Mažosioms įmonėms supaprastinami i.SAF duomenų teikimo reikalavimai.',
+      body: ['Mažosioms įmonėms supaprastinami i.SAF duomenų teikimo reikalavimai.', 'Pakeitimai taikomi nuo 2026 m. rugsėjo mėnesio.'],
+      acts: [] },
+    { id: 112, date: '2026-06-11', tag: 'Nekilnojamasis turtas', source: 'Seimas',
+      title: 'Pakeistas NT mokesčio neapmokestinamasis dydis gyvenamajam būstui',
+      summary: 'Padidintas neapmokestinamasis gyvenamosios paskirties turto vertės dydis.',
+      body: ['Padidintas neapmokestinamasis gyvenamosios paskirties turto vertės dydis.', 'Pakeitimas mažins mokestinę naštą daliai būsto savininkų.'],
+      acts: [] },
+    { id: 113, date: '2026-06-08', tag: 'GPM', source: 'VMI',
+      title: 'Kaip apmokestinamos pajamos iš kriptoturto: VMI išaiškinimas',
+      summary: 'VMI paskelbė išaiškinimą dėl pajamų iš kriptoturto perleidimo apmokestinimo.',
+      body: ['VMI paskelbė išaiškinimą dėl pajamų iš kriptoturto perleidimo apmokestinimo.', 'Nurodyta, kaip apskaičiuoti įsigijimo kainą ir kokius dokumentus saugoti.'],
+      acts: [] },
+    { id: 114, date: '2026-06-04', tag: 'Darbo santykiai', source: 'Valstybinė darbo inspekcija',
+      title: 'VDI primena apie darbo laiko apskaitos žiniaraščių pildymą',
+      summary: 'Darbdaviai privalo tiksliai fiksuoti faktiškai dirbtą laiką.',
+      body: ['Darbdaviai privalo tiksliai fiksuoti faktiškai dirbtą laiką.', 'VDI patikrinimų metu dažniausiai nustatomi viršvalandžių apskaitos trūkumai.'],
+      acts: [] },
+    { id: 115, date: '2026-06-01', tag: 'Pelno mokestis', source: 'VMI',
+      title: 'Patikslintos reprezentacinių sąnaudų atskaitymo taisyklės',
+      summary: 'Komentare paaiškinta, kokios renginių ir dovanų išlaidos priskiriamos reprezentacinėms.',
+      body: ['Komentare paaiškinta, kokios renginių ir dovanų išlaidos priskiriamos reprezentacinėms.', 'Nurodyti dokumentai, kurių reikia sąnaudoms pagrįsti.'],
+      acts: [] },
+    { id: 116, date: '2026-05-28', tag: 'Muitai', source: 'Muitinės departamentas',
+      title: 'Nuo liepos keičiasi importo deklaravimo tvarka',
+      summary: 'Importuojant prekes iš trečiųjų šalių bus taikoma nauja elektroninio deklaravimo sistema.',
+      body: ['Importuojant prekes iš trečiųjų šalių bus taikoma nauja elektroninio deklaravimo sistema.', 'Verslui rekomenduojama iš anksto atnaujinti prieigas.'],
+      acts: [] },
+    { id: 117, date: '2026-05-25', tag: 'PVM', source: 'VMI',
+      title: 'Atvirkštinio PVM apmokestinimo taikymas statybos paslaugoms',
+      summary: 'VMI patikslino, kada statybos darbams taikomas atvirkštinis PVM apmokestinimas.',
+      body: ['VMI patikslino, kada statybos darbams taikomas atvirkštinis PVM apmokestinimas.', 'Pateikti pavyzdžiai dėl subrangos sutarčių.'],
+      acts: [] },
+    { id: 118, date: '2026-05-21', tag: 'Socialinis draudimas', source: 'Sodra',
+      title: 'Ligos išmokų skaičiavimo pakeitimai nuo 2026 m. liepos',
+      summary: 'Keičiasi ligos išmokos dydžio apskaičiavimo tvarka.',
+      body: ['Keičiasi ligos išmokos dydžio apskaičiavimo tvarka.', 'Pirmąsias dvi ligos dienas ir toliau apmokės darbdavys.'],
+      acts: [] },
+    { id: 119, date: '2026-05-18', tag: 'Individuali veikla', source: 'VMI',
+      title: 'Individualios veiklos išlaidų atskaitymas: dažniausios klaidos',
+      summary: 'VMI apžvelgė dažniausias klaidas, kai individualią veiklą vykdantys asmenys atskaito išlaidas.',
+      body: ['VMI apžvelgė dažniausias klaidas, kai individualią veiklą vykdantys asmenys atskaito išlaidas.', 'Primenama, kad 30 proc. išlaidų taikymui dokumentai nereikalingi.'],
+      acts: [] },
+    { id: 120, date: '2026-05-14', tag: 'Pelno mokestis', source: 'Seimas',
+      title: 'Pratęsta investicinio projekto lengvata iki 2028 m.',
+      summary: 'Įmonės investicinio projekto lengvata galės naudotis dar dvejus metus.',
+      body: ['Įmonės investicinio projekto lengvata galės naudotis dar dvejus metus.', 'Lengvata leidžia sumažinti apmokestinamąjį pelną iki 100 proc.'],
+      acts: [] },
+    { id: 121, date: '2026-05-11', tag: 'GPM', source: 'VMI',
+      title: 'Gyventojų turto deklaravimo pakeitimai',
+      summary: 'Patikslinta, kurie gyventojai privalo deklaruoti turtą ir kokia vertės riba taikoma.',
+      body: ['Patikslinta, kurie gyventojai privalo deklaruoti turtą ir kokia vertės riba taikoma.', 'Deklaracijas reikės pateikti iki gegužės 1 d.'],
+      acts: [] },
+    { id: 122, date: '2026-05-07', tag: 'Buhalterinė apskaita', source: 'Finansų ministerija',
+      title: 'Elektroninių sąskaitų faktūrų privalomumas B2B sandoriams',
+      summary: 'Numatoma palaipsniui įvesti privalomas elektronines sąskaitas faktūras tarp verslo subjektų.',
+      body: ['Numatoma palaipsniui įvesti privalomas elektronines sąskaitas faktūras tarp verslo subjektų.', 'Pirmasis etapas prasidės 2027 m.'],
+      acts: [] },
+    { id: 123, date: '2026-05-04', tag: 'Darbo santykiai', source: 'Seimas',
+      title: 'Didinama minimali mėnesinė alga nuo 2027 m. sausio',
+      summary: 'Vyriausybė patvirtino didesnę minimalią mėnesinę algą.',
+      body: ['Vyriausybė patvirtino didesnę minimalią mėnesinę algą.', 'Pokytis turės įtakos ir su MMA susijusioms išmokoms bei ribinėms sumoms.'],
+      acts: [] }
+  ];
   const TODAY = '2026-10-07';
   const STORE = 'ms-naujienos-read-v1';
 
@@ -1091,6 +1197,7 @@
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem(STORE)); } catch (e) {}
         this.read = saved || { 4: '2026-09-24', 7: '2026-09-09', 9: '2026-09-02', 10: '2026-08-29' };
+        this.mvpSnap = Object.assign({}, this.read);
         try { this.saved = JSON.parse(localStorage.getItem(STORE + '-saved')) || {}; } catch (e) {}
         const fromHash = location.hash.replace('#', '');
         const deep = fromHash.match(/^naujiena-(\d+)$/);
@@ -1106,18 +1213,26 @@
       },
 
       // ---------- Versijos perjungėjas ----------
+      // MVP: pažymėtos naujienos keliauja į sąrašo apačią tik perkrovus puslapį (pagal momentinę kopiją), kad paspaudus niekas nešokinėtų
+      mvpSorted(list) {
+        const snap = this.mvpSnap;
+        return list.filter(n => !snap[n.id]).concat(list.filter(n => snap[n.id]));
+      },
       setView(v) {
         if (this.view === v) return;
         this.view = v;
         this.hideTip();
         this.oldSelId = null;
         if (v === 'sena' || v === 'panel') { this.oldTab = this.unreadCount ? 'unread' : 'all'; this.snapshotOld(); }
+        if (v === 'mvp') this.mvpSnap = Object.assign({}, this.read);
         try { localStorage.setItem(STORE + '-view', v); } catch (e) {}
         try { history.replaceState(null, '', '#' + v); } catch (e) {}
       },
       get isScoped() { return this.scoped && this.view === 'nauja'; },
       get isOld() { return this.view === 'sena' || this.view === 'panel' || this.view === 'mvp'; },
-      archive: ARCHIVE,
+      archive: ARCHIVE.concat(ARCHIVE_MORE),
+      mvpArchLimit: ARCHIVE.length,
+      mvpSnap: {},
 
       // ---------- „Panel“ versija ----------
       // Turinys laikomas pagal oldPanelId, kad uždarant skydelis išslystų su turiniu (ne tuščias)
