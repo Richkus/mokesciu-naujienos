@@ -385,7 +385,13 @@
   .mvp-h1 { padding-bottom: 12px; border-bottom: 1px solid var(--ms-line); font-weight: 400; }
   .mvp-status { margin: 16px 0 0; padding-bottom: 16px; border-bottom: 1px solid var(--ms-line); font-size: 12.5px; color: var(--ms-ink); }
   .mvp-status b { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 2px; border-radius: 3px; background: var(--ms-coral); color: #fff; font-weight: 600; text-align: center; line-height: 16px; }
-  .mvp-item.is-archived h3 { color: var(--ms-ink-soft); }
+  /* Archyvas šiek tiek nublankęs: pilki pavadinimai ir neperžymėti checkbox'ai */
+  .mvp-item.is-archived h3 { color: #7d8b8d; }
+  .mvp-item.is-archived h3:hover { color: var(--ms-ink-soft); }
+  .old .mvp-item.is-archived .ck:not(.is-on) { border-color: #b9c6c7; background: #f4f7f7; }
+  .old .mvp-item.is-archived .ck:not(.is-on):hover { border-color: #8fa3a5; background: #fff; box-shadow: 0 0 0 4px #eef2f2; }
+  .old .mvp-item.is-archived .ck:not(.is-on):not(.no-hint):hover path { stroke: #8fa3a5; }
+  .old .mvp-item.is-archived .ck:not(.is-on):focus-visible { box-shadow: 0 0 0 3px rgba(143,163,165,.4); }
   .old-load-more { display: inline-flex; align-items: center; gap: 8px; }
   .old-load-spin { display: none; width: 13px; height: 13px; border: 2px solid #cfe3e4; border-top-color: var(--ms-teal); border-radius: 50%; animation: old-spin .7s linear infinite; }
   .old-load-more.is-loading { cursor: default; color: var(--ms-muted); }
