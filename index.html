@@ -386,19 +386,16 @@
   .mvp-intro { margin: 18px 0 14px; font-size: 14.5px; line-height: 21px; color: var(--ms-ink); }
   .mvp-status { margin: 0; padding-bottom: 16px; border-bottom: 1px solid var(--ms-line); font-size: 12.5px; color: var(--ms-ink); }
   .mvp-status b { display: inline-block; min-width: 18px; padding: 0 4px; margin: 0 2px; border-radius: 3px; background: var(--ms-coral); color: #fff; font-weight: 600; text-align: center; line-height: 16px; }
-  /* checkbox kaip dabartiniame Suflerio puslapyje */
-  .mvp-ck { position: relative; width: 26px; height: 26px; margin-top: 2px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; background: #f4a6a3; cursor: pointer; transition: background .25s, box-shadow .25s; }
-  .mvp-ck svg { width: 15px; height: 15px; }
-  .mvp-ck path { fill: none; stroke: rgba(255, 255, 255, .85); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .mvp-ck.is-on { background: #d3e3e4; box-shadow: inset 0 0 0 1.5px #8fb3b6; }
-  .mvp-ck.is-on path { stroke: #2f5f63; }
-  .mvp-ck:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.4); }
-  /* archyvo checkbox: tuščias, neutralus pilkas (ne „pažymėta“), užvedus pelę blanki varnelė */
-  .mvp-ck.is-archived { background: #fff; box-shadow: inset 0 0 0 1.5px #c3cfd0; }
-  .mvp-ck.is-archived path { stroke: transparent; }
-  .mvp-ck.is-archived:hover { box-shadow: inset 0 0 0 1.5px #8fa3a5; }
-  .mvp-ck.is-archived:hover path { stroke: #b4c3c4; }
   .mvp-item.is-archived h3 { color: var(--ms-ink-soft); }
+  .old-load-more { display: inline-flex; align-items: center; gap: 8px; }
+  .old-load-spin { display: none; width: 13px; height: 13px; border: 2px solid #cfe3e4; border-top-color: var(--ms-teal); border-radius: 50%; animation: old-spin .7s linear infinite; }
+  .old-load-more.is-loading { cursor: default; color: var(--ms-muted); }
+  .old-load-more.is-loading .old-load-spin { display: inline-block; }
+  @keyframes old-spin { to { transform: rotate(360deg); } }
+  /* MVP archyvas: neperžymėtas checkbox'as tuščias ir pilkas (ne koralinis), varnelę uždeda tik žmogus */
+  .old .ck.is-archived:not(.is-on) { border-color: #c3cfd0; background: #fff; }
+  .old .ck.is-archived:not(.is-on):hover { border-color: #8fa3a5; background: #fff; box-shadow: 0 0 0 4px #eef2f2; }
+  .old .ck.is-archived:not(.is-on):not(.no-hint):hover path { stroke: #8fa3a5; }
   .mvp-arch-head { display: flex; align-items: center; gap: 4px; margin-top: 28px; padding: 10px 0 8px; border-bottom: 1px solid var(--ms-line); font-size: 12px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--ms-sub); }
   .mvp-arch-head .old-info-btn { width: 22px; height: 22px; transform: none; }
   .mvp-arch-pop { text-transform: none; letter-spacing: 0; }
@@ -642,7 +639,7 @@
     </div>
 
     <!-- ===== „Sena“ versija: dabartinė skiltis + vidinis puslapis ===== -->
-    <div class="old" x-show="isOld" x-cloak x-ref="old" :data-tab="oldTab">
+    <div class="old" x-show="isOld" x-cloak x-ref="old" :data-tab="view === 'mvp' ? 'mvp' : oldTab">
       <!-- Sąrašas -->
       <div class="old-page" x-show="view !== 'mvp' && (!oldSel || view === 'panel')">
         <div class="old-main">
@@ -755,7 +752,7 @@
 
           <template x-for="n in items" :key="'mvp' + n.id">
               <div class="old-item mvp-item" :class="{ 'is-read': isRead(n) }">
-                <button type="button" class="mvp-ck" :class="{ 'is-on': isRead(n), 'is-archived': false }"
+                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
                 <div style="min-width:0">
@@ -785,7 +782,7 @@
 
           <template x-for="n in archive" :key="'mvpa' + n.id">
               <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n) }">
-                <button type="button" class="mvp-ck" :class="{ 'is-on': isRead(n), 'is-archived': !isRead(n) }"
+                <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isMuted(n), 'is-archived': !isRead(n), 'is-pop': pop==='m'+n.id }"
                         :aria-pressed="isRead(n)" :aria-label="isRead(n) ? 'Atžymėti kaip skaitytą' : 'Pažymėti kaip skaitytą'"
                         @click="toggle(n, 'm')" @mouseenter="showTip($event, n)" @mouseleave="hideTip()"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg></button>
                 <div style="min-width:0">
@@ -799,16 +796,12 @@
               </div>
           </template>
 
-          <nav class="old-pager" aria-label="Puslapiai">
-            <button type="button" class="is-on" aria-current="page">1</button>
-            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">2</button>
-            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">3</button>
-            <span aria-hidden="true">…</span>
-            <button type="button" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">92</button>
-            <button type="button" class="old-pager-next" aria-label="Kitas puslapis" @click="showToast('Prototipe rodomas tik pirmas puslapis', null, null)">
-              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
+          <!-- Vietoje puslapių numerių: „Rodyti daugiau“ be skaičiaus -->
+          <div class="old-queue-end">
+            <button type="button" class="old-load-more" :class="{ 'is-loading': mvpLoading }" :disabled="mvpLoading" @click="mvpLoading = true; setTimeout(() => { mvpLoading = false; showToast('Prototipe daugiau naujienų nėra', null, null) }, 700)">
+              <span class="old-load-spin" aria-hidden="true"></span><span>Rodyti daugiau</span>
             </button>
-          </nav>
+          </div>
         </div>
 
         <aside class="old-side">
@@ -1090,6 +1083,7 @@
       oldTab: 'unread',
       oldIds: [],
       oldLimit: 50,
+      mvpLoading: false,
       oldFresh: {},
       oldPanelId: null,
 
