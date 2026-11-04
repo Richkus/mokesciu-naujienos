@@ -1485,6 +1485,8 @@
 
       // Tooltip: 400 ms delsa pirmą kartą, iškart rodomas kaimyniniams (kol "šiltas"), dingsta iškart
       showTip(e, n, instant, label) {
+        // Telefonuose ir planšetėse (be hover) tooltip'o nerodom: liečiant jis likdavo kaboti scrollinant
+        if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
         const r = e.currentTarget.getBoundingClientRect();
         clearTimeout(this.tipTimer);
         const show = () => { this.tip = { id: n.id, label: label || null, x: r.left, y: r.top }; };
