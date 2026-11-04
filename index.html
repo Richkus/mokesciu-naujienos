@@ -410,9 +410,8 @@
   .mvp-arch-toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83,169,177,.4); }
   .mvp-arch-chev { transition: transform .25s var(--ms-ease); }
   .mvp-arch-head.is-open .mvp-arch-chev { transform: rotate(90deg); }
+  .mvp-arch-note { margin: 4px 0 6px; font-size: 14px; line-height: 21px; color: var(--ms-ink); }
   .mvp-arch-sub { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--ms-muted); }
-  .mvp-arch-head .old-info-btn { width: 22px; height: 22px; transform: none; }
-  .mvp-arch-pop { text-transform: none; letter-spacing: 0; }
 
   /* ==========================================================
      „Panel“ versija: šoninis skydelis + backdrop
@@ -785,18 +784,10 @@
               <svg class="mvp-arch-chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2.5L8 6l-3.5 3.5"/></svg>
               <span>Archyvas</span><span class="mvp-arch-sub">· senesnės nei 60 d.</span>
             </button>
-            <span class="old-info" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false" @mouseenter="open = true" @mouseleave="open = false">
-              <button type="button" class="old-info-btn" :class="{ 'is-on': open }" @click="open = !open" aria-label="Kas yra archyvas?" :aria-expanded="open.toString()">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="6.25"/><path d="M7 6.2v3.6"/><circle cx="7" cy="4.2" r=".4" fill="currentColor"/></svg>
-              </button>
-              <span class="old-info-pop mvp-arch-pop" x-show="open" x-cloak x-transition.opacity.scale.96.origin.top.left.duration.150ms role="tooltip">
-                <strong>Kas yra archyvas?</strong>
-                Senesnės nei 60 dienų naujienos. Jos nebeįeina į naujų skaičių, bet pasižymėti, kad perskaitėte, vis tiek galite.
-              </span>
-            </span>
           </div>
 
           <div id="mvp-archive" x-show="mvpArchOpen" x-collapse x-cloak>
+          <p class="mvp-arch-note">Senesnės nei 60 dienų naujienos. Jos nebeįeina į naujų skaičių, bet pasižymėti, kad perskaitėte, vis tiek galite.</p>
           <template x-for="(n, i) in archive.slice(0, mvpArchLimit)" :key="'mvpa' + n.id">
               <div class="old-item mvp-item is-archived" :class="{ 'is-read': isRead(n), 'is-new': i >= 10 }">
                 <button type="button" class="ck" :class="{ 'is-on': isRead(n), 'is-muted': isRead(n) && pop !== 'm'+n.id, 'is-pop': pop==='m'+n.id }"
